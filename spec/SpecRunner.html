@@ -1,0 +1,60 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+  "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>Backbone.offline :: Jasmine Spec Runner</title>
+
+  <link rel="shortcut icon" type="image/png" href="../vendor/jasmine/jasmine_favicon.png">
+  <link rel="stylesheet" type="text/css" href="../vendor/jasmine/jasmine.css">
+  <script type="text/javascript" src="../vendor/jasmine/jasmine.js"></script>
+  <script type="text/javascript" src="../vendor/jasmine/jasmine-html.js"></script>
+
+  <!-- include vendor files here... -->
+  <script type="text/javascript" src="../vendor/jquery.js"></script>
+  <script type="text/javascript" src="../vendor/underscore.js"></script>
+  <script type="text/javascript" src="../vendor/backbone.js"></script>
+
+  <!-- include support files here... -->
+  <script type="text/javascript" src="support/jasmine_fake_ajax.js"></script>
+  <script type="text/javascript" src="support/console_log_helper.js"></script>
+
+  <!-- include source files here... -->
+  <script type="text/javascript" src="../js/backbone.offline.js"></script>
+
+  <!-- include spec files here... -->
+  <script type="text/javascript" src="js/backbone.offline.spec.js"></script>
+
+  <script type="text/javascript">
+    (function() {
+      var jasmineEnv = jasmine.getEnv();
+      jasmineEnv.updateInterval = 1000;
+
+      var trivialReporter = new jasmine.TrivialReporter();
+
+      jasmineEnv.addReporter(trivialReporter);
+
+      jasmineEnv.specFilter = function(spec) {
+        return trivialReporter.specFilter(spec);
+      };
+
+      var currentWindowOnload = window.onload;
+
+      window.onload = function() {
+        if (currentWindowOnload) {
+          currentWindowOnload();
+        }
+        execJasmine();
+      };
+
+      function execJasmine() {
+        jasmineEnv.execute();
+      }
+
+    })();
+  </script>
+
+</head>
+
+<body>
+</body>
+</html>
