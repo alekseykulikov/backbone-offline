@@ -1,39 +1,4 @@
-class Dream extends Backbone.Model
-  defaults:
-    name : 'Visit Iceland'
-
-class Dreams extends Backbone.Collection
-  model: Dream
-  url: '/api/dreams'
-
-  initialize: ->
-    @storage = new Storage('dreams', this, autoSync: false)
-
-
-describe 'window.localStorageRecords', ->
-  beforeEach ->
-    localStorage.setItem('ideas', '2,3')
-    @records = new localStorageRecords('ideas')
-
-  it 'initializes @name', -> expect(@records.name).toEqual('ideas')
-  it 'initializes @values', -> expect(@records.values).toEqual(['2', '3'])
-
-  describe 'add', ->
-    beforeEach -> @records.add('5')
-    it 'pushes value to values', -> expect(@records.values).toEqual(['2', '3', '5'])
-    it 'updates localStorage item', -> expect(localStorage.getItem 'ideas').toEqual('2,3,5')
-
-    it 'does not include itemId to values twice', ->
-      @records.add('5')
-      expect(@records.values).toEqual(['2', '3', '5'])
-
-  describe 'remove', ->
-    beforeEach -> @records.remove('2')
-    it 'remove value from values', -> expect(@records.values).toEqual(['3'])
-    it 'updates localStorage item', -> expect(localStorage.getItem 'ideas').toEqual('3')
-
-
-describe 'window.Storage', ->
+describe 'Offline.Storage', ->
   beforeEach ->
     localStorage.setItem('dreams', '')
     @dreams = new Dreams()
@@ -46,75 +11,17 @@ describe 'window.Storage', ->
     beforeEach ->
       localStorage.setItem('items', '2,3')
       localStorage.setItem('items-destroy', '1,4')
-      @itemsStore = new Storage('items', [], autoSync: false, keys: {parent_id: @dreams})
+      @itemsStore = new Offline.Storage('items', [], autoSync: false, keys: {parent_id: @dreams})
 
     it 'initializes variable @allRecords', -> expect(@itemsStore.allRecords.values).toEqual(['2', '3'])
     it 'initializes variable @destroyRecords', -> expect(@itemsStore.destroyRecords.values).toEqual(['1', '4'])
     it 'initializes variable @keys by options', -> expect(@itemsStore.keys).toEqual(parent_id: @dreams)
-    it 'initializes variable @autoSync by options', -> expect(@itemsStore.autoSync).toBeFalsy()
 
     it 'sets default options', ->
       registerFakeAjax url: '/api/dreams', successData: {}
-      storage = new Storage('dreams', @dreams)
+      storage = new Offline.Storage('dreams', @dreams)
 
       expect(storage.keys).toEqual({})
-      expect(storage.autoSync).toBeTruthy()
-
-  describe 'idAttribute manipulations', ->
-    beforeEach ->
-      @storage.idAttribute = "_id"
-
-    it 'saves correct sid on create', ->
-      item = @storage.create name: 'New name', _id: '1'
-      expect(item.sid).toEqual '1'
-
-    it 'creates new record on pull', ->
-      @storage.pullItem(_id: '5', name: 'New dream')
-      expect(@storage.findBySid('5').get 'name').toEqual('New dream')
-
-    it 'finds correct record for update on pull', ->
-      item = @dreams.create {name: 'New name', _id: '1', updated_at: '2012-03-04T14:00:10Z'}, {local: true}
-      @storage.pullItem(_id: '1', name: 'Updated name', updated_at: '2012-03-04T15:00:10Z')
-      expect(item.get 'name').toEqual('Updated name')
-
-    it 'replace "new" sid on push', ->
-      item = @dreams.create name: 'New name'
-      registerFakeAjax url: '/api/dreams', type: 'post', successData: {_id: '11'}
-
-      @storage.pushItem(item)
-      expect(item.get 'sid').toEqual '11'
-
-  describe 'create', ->
-    beforeEach ->
-      @dream = new Dream(name: 'Diving with scuba')
-
-    it 'returns model attributes', ->
-      expect(@storage.create(@dream).name).toEqual('Diving with scuba')
-
-    it 'generates local id for new model', ->
-      spyOn(@storage, 'guid').andReturn('1')
-      @storage.create(@dream)
-      expect(@storage.guid).toHaveBeenCalled()
-
-    it 'calls saveItem with new model', ->
-      spyOn(@storage, 'saveItem')
-      @storage.create(@dream)
-      expect(@storage.saveItem).toHaveBeenCalledWith(jasmine.any(Object))
-
-    it 'sets updated_at and dirty', ->
-      createdModel = @storage.create(@dream)
-      expect(createdModel.dirty).toBeTruthy()
-      expect(createdModel.updated_at).toBeDefined()
-
-    it 'does not set updated_at and dirty if local true', ->
-      createdModel = @storage.create(@dream, local: true)
-      expect(createdModel.dirty).toBeUndefined()
-      expect(createdModel.updated_at).toBeUndefined()
-
-    describe 'saves sid - server id', ->
-      it 'model id', -> expect(@storage.create(id: 1).sid).toEqual(1)
-      it '"new" when model was create localy', -> expect(@storage.create(@dream).sid).toEqual('new')
-      it 'model sid attribute if model has it', -> expect(@storage.create(sid: 'abcd').sid).toEqual('abcd')
 
   describe 'update', ->
     beforeEach ->
@@ -282,7 +189,7 @@ describe 'window.Storage', ->
     beforeEach ->
       localStorage.setItem('child-dreams', '')
       @childDreams = new Dreams()
-      @storage2 = new Storage('child-dreams', @childDreams, autoSync: false, keys: {parent_id: @dreams})
+      @storage2 = new Offline.Storage('child-dreams', @childDreams, autoSync: false, keys: {parent_id: @dreams})
       @childDreams.storage = @storage2
       @dream = @dreams.create name: 'Visit Norway', sid: '1'
 
@@ -307,31 +214,13 @@ describe 'window.Storage', ->
 
       it 'replace server id to local on pull', ->
         @storage2.pullItem(name: 'Live in Norvay', parent_id: '1', id: '100')
-        expect(@storage2.findBySid('100').get 'parent_id').toEqual(@dream.id)
+        expect(@storage2.colWrapper.get('100').get 'parent_id').toEqual(@dream.id)
 
       it 'replace local id to server on push', ->
         childDream = @childDreams.create(name: 'Live in Norvay', parent_id: '1')
         spyOn(Backbone, 'ajaxSync')
         @storage2.pushItem(childDream)
         expect(Backbone.ajaxSync.mostRecentCall.args[1].get 'parent_id').toEqual('1')
-
-  describe 'getDirties', ->
-    it 'return items with dirty mark', ->
-      @dreams.add [{id: 1, dirty: false}, {id: 2, dirty: true}, {id: 3, dirty: false}]
-      expect(@storage.getDirties().length).toEqual 1
-
-  describe 'prepareStorage', ->
-    it 'runs fullSync when storage is Empty', ->
-      localStorage.removeItem('dreams')
-      spyOn(@storage, 'fullSync')
-      @storage.prepareStorage()
-      expect(@storage.fullSync).toHaveBeenCalledWith()
-
-    it 'runs incrementalSync when storage exists and @autoSync=true', ->
-      @storage.autoSync = true
-      spyOn(@storage, 'incrementalSync')
-      @storage.prepareStorage()
-      expect(@storage.incrementalSync).toHaveBeenCalledWith()
 
   describe 'pushItem', ->
     describe 'when item is new', ->
@@ -424,21 +313,6 @@ describe 'window.Storage', ->
       expect(@storage.allRecords.reset).toHaveBeenCalled()
       expect(@storage.destroyRecords.reset).toHaveBeenCalled()
 
-  describe 'getRemovedIds', ->
-    beforeEach ->
-      @dreams.create(name: 'item 1', sid: '1')
-      @dreams.create(name: 'item 2', sid: '2')
-      @dreams.create(name: 'item 3', sid: '3')
-
-      @response = [{name: 'item 1', id: '1'}]
-
-    it 'returns array of items to remove', ->
-      expect(@storage.getRemovedIds(@response)).toEqual(['2', '3'])
-
-    it 'ignoring items with "new" sid', ->
-      @dreams.create(name: 'item 4', sid: 'new')
-      expect(@storage.getRemovedIds(@response)).toEqual(['2', '3'])
-
   describe 'removeBySid', ->
     beforeEach ->
       @dream = @dreams.create(name: 'simple item', sid: '1')
@@ -451,18 +325,6 @@ describe 'window.Storage', ->
     it 'does not set mark to localStorage', ->
       @storage.removeBySid('1')
       expect(localStorage.getItem('dreams-destroy')).toBeNull()
-
-  describe 'findBySid', ->
-    it 'finds item in collection by sid attribute', ->
-      @dreams.add [{name: 'first', sid: '1'}, {name: 'second', sid: '2'}]
-      expect(@storage.findBySid('2').get 'name').toEqual('second')
-
-    it 'finds in different collection in second parameter', ->
-      localStorage.setItem('child-dreams', '')
-      childDreams = new Dreams()
-      storage2 = new Storage('child-dreams', childDreams, autoSync: false)
-      childDreams.add [{name: 'first', sid: 'a'}, {name: 'second', sid: 'b'}]
-      expect(@storage.findBySid('b', childDreams).get 'name').toEqual('second')
 
   describe 'pullItem', ->
     beforeEach ->
@@ -508,83 +370,14 @@ describe 'window.Storage', ->
 
     it 'saves item.id to item.sid', ->
       @storage.createItem(name: 'New', id: '1')
-      expect(@storage.findBySid '1').toBeDefined()
+      expect(@storage.colWrapper.get '1').toBeDefined()
 
     it 'does not mark new item as dirty', ->
       @storage.createItem(name: 'New', id: '1')
-      expect(@storage.findBySid('1').get 'dirty').toBeFalsy()
+      expect(@storage.colWrapper.get('1').get 'dirty').toBeFalsy()
 
     it 'does not create local deleted item', ->
       localStorage.setItem('dreams-destroy', '2')
-      @storage.destroyRecords = new localStorageRecords('dreams-destroy')
+      @storage.destroyRecords = new Offline.Records('dreams-destroy')
       @storage.createItem(name: 'Old item', id: '2')
-      expect(@storage.findBySid '2').toBeUndefined()
-
-
-describe 'Backbone.localSync', ->
-  beforeEach ->
-    localStorage.setItem('dreams', '')
-    @dreams = new Dreams()
-    @storage = @dreams.storage
-
-  afterEach ->
-    window.localStorage.clear()
-
-  beforeEach ->
-    registerFakeAjax url: '/api/dreams', successData: {}
-    @dreams.fetch()
-    @dream = @dreams.create()
-
-  it 'calls findAll when read collection', ->
-    spyOn(@storage, 'findAll')
-    @dreams.fetch()
-    expect(@storage.findAll).toHaveBeenCalledWith()
-
-  it 'calls find when read model', ->
-    spyOn(@storage, 'find')
-    @dream.fetch()
-    expect(@storage.find).toHaveBeenCalledWith(@dream)
-
-  it 'calls create when create model', ->
-    spyOn(@storage, 'create')
-    @dreams.create(name: 'New dream')
-    expect(@storage.create).toHaveBeenCalled()
-
-  it 'calls update when update model', ->
-    spyOn(@storage, 'update')
-    @dream.save(name: 'New dream')
-    expect(@storage.update).toHaveBeenCalledWith(@dream, jasmine.any(Object))
-
-  it 'calls destroy when delete model', ->
-    spyOn(@storage, 'destroy')
-    @dream.destroy()
-    expect(@storage.destroy).toHaveBeenCalledWith(@dream, jasmine.any(Object))
-
-  it 'calls options.success when method response something', ->
-    callback = jasmine.createSpy('-Success Callback-')
-    @dream.save({name: 'New dream'}, {success: (resp) -> callback(resp)})
-    expect(callback).toHaveBeenCalledWith(@dream)
-
-  it 'calls options.error when response is blank', ->
-    errorCallback = jasmine.createSpy('-Error Callback-')
-    spyOn(@storage, 'update').andReturn(null)
-    @dream.save({name: ''}, {error: (message) -> errorCallback(message)})
-    expect(errorCallback).toHaveBeenCalled()
-
-
-describe 'Backbone.offline', ->
-  it 'delegates actions to Backbone.localSync when storage attribute exists', ->
-    localStorage.setItem('dreams', '')
-    @dreams = new Dreams()
-    spyOn(Backbone, 'localSync')
-
-    @dreams.fetch()
-    expect(Backbone.localSync).toHaveBeenCalled()
-
-  it 'delegates actions to Backbone.ajaxSync for default behavior when storage attribute empty', ->
-    @dreams = new Dreams()
-    @dreams.storage = null
-    spyOn(Backbone, 'ajaxSync')
-
-    @dreams.fetch()
-    expect(Backbone.ajaxSync).toHaveBeenCalled()
+      expect(@storage.colWrapper.get '2').toBeUndefined()
