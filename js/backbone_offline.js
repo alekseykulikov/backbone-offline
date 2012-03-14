@@ -76,24 +76,45 @@
 
   Offline.Collection = (function() {
 
-    function Collection(collection) {
-      this.collection = collection;
+    function Collection(items) {
+      this.items = items;
     }
 
     Collection.prototype.dirty = function() {
-      return this.collection.filter(function(item) {
+      return this.items.filter(function(item) {
         return item.get('dirty');
       });
     };
 
     Collection.prototype.get = function(sid) {
-      return this.collection.find(function(item) {
+      return this.items.find(function(item) {
         return item.get('sid') === sid;
       });
     };
 
     Collection.prototype.diff = function(response) {
-      return _.difference(_.without(this.collection.pluck('sid'), 'new'), _.pluck(response, 'id'));
+      return _.difference(_.without(this.items.pluck('sid'), 'new'), _.pluck(response, 'id'));
+    };
+
+    Collection.prototype.destroyDiff = function(response) {
+      var sid, _i, _len, _ref, _ref2, _results;
+      _ref = this.diff(response);
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        sid = _ref[_i];
+        _results.push((_ref2 = this.get(sid)) != null ? _ref2.destroy({
+          local: true
+        }) : void 0);
+      }
+      return _results;
+    };
+
+    Collection.prototype.fakeModel = function(sid) {
+      var model;
+      model = new Backbone.Model();
+      model.id = sid;
+      model.urlRoot = this.items.url;
+      return model;
     };
 
     return Collection;
@@ -104,12 +125,11 @@
 
     function Storage(name, collection, options) {
       this.name = name;
-      this.collection = collection;
       if (options == null) options = {};
       this.keys = options.keys || {};
       this.allRecords = new Offline.Records(this.name);
       this.destroyRecords = new Offline.Records("" + this.name + "-destroy");
-      this.colWrapper = new Offline.Collection(this.collection);
+      this.sync = new Offline.Sync(collection, this);
     }
 
     Storage.prototype.create = function(model, options) {
@@ -121,7 +141,7 @@
         model.updated_at = (new Date).toString();
         model.dirty = true;
       }
-      return this.saveItem(model);
+      return this.save(model);
     };
 
     Storage.prototype.update = function(model, options) {
@@ -132,7 +152,7 @@
           dirty: true
         });
       }
-      return this.saveItem(model);
+      return this.save(model);
     };
 
     Storage.prototype.destroy = function(model, options) {
@@ -141,7 +161,7 @@
       if (!(options.local || (sid = model.get('sid')) === 'new')) {
         this.destroyRecords.add(sid);
       }
-      return this.removeItem(model);
+      return this.remove(model);
     };
 
     Storage.prototype.find = function(model) {
@@ -150,93 +170,16 @@
 
     Storage.prototype.findAll = function() {
       var id, _i, _len, _ref, _results;
+      if (this.isEmpty()) {
+        this.sync.full();
+      } else {
+        this.sync.incremental();
+      }
       _ref = this.allRecords.values;
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         id = _ref[_i];
         _results.push(JSON.parse(localStorage.getItem("" + this.name + "-" + id)));
-      }
-      return _results;
-    };
-
-    Storage.prototype.prepare = function() {
-      var _this = this;
-      if (this.isEmpty()) {
-        return this.fullSync({
-          success: function() {
-            return _this.collection.fetch();
-          }
-        });
-      } else {
-        return this.collection.fetch({
-          success: function() {
-            return _this.incrementalSync();
-          }
-        });
-      }
-    };
-
-    Storage.prototype.fullSync = function(options) {
-      var _this = this;
-      if (options == null) options = {};
-      return Backbone.ajaxSync('read', this.collection, {
-        success: function(response, status, xhr) {
-          var item, _i, _len;
-          _this.clear();
-          localStorage.setItem(_this.name, '');
-          _this.collection.reset([]);
-          for (_i = 0, _len = response.length; _i < _len; _i++) {
-            item = response[_i];
-            _this.create(item, {
-              local: true
-            });
-          }
-          if (options.success) return options.success(response);
-        }
-      });
-    };
-
-    Storage.prototype.incrementalSync = function() {
-      var _this = this;
-      return this.pull({
-        success: function() {
-          return _this.push();
-        }
-      });
-    };
-
-    Storage.prototype.pull = function(options) {
-      var _this = this;
-      if (options == null) options = {};
-      return Backbone.ajaxSync('read', this.collection, {
-        success: function(response, status, xhr) {
-          var item, sid, _i, _j, _len, _len2, _ref;
-          _ref = _this.colWrapper.diff(response);
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            sid = _ref[_i];
-            _this.removeBySid(sid);
-          }
-          for (_j = 0, _len2 = response.length; _j < _len2; _j++) {
-            item = response[_j];
-            _this.pullItem(item);
-          }
-          if (options.success) return options.success();
-        }
-      });
-    };
-
-    Storage.prototype.push = function() {
-      var item, sid, _i, _j, _len, _len2, _ref, _ref2, _results;
-      _ref = this.colWrapper.dirty();
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        item = _ref[_i];
-        this.pushItem(item);
-      }
-      _ref2 = this.destroyRecords.values;
-      _results = [];
-      for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
-        sid = _ref2[_j];
-        _results.push(this.destroyBySid(sid));
       }
       return _results;
     };
@@ -249,40 +192,167 @@
       return this.s4() + this.s4() + '-' + this.s4() + '-' + this.s4() + '-' + this.s4() + '-' + this.s4() + this.s4() + this.s4();
     };
 
-    Storage.prototype.saveItem = function(item) {
+    Storage.prototype.save = function(item) {
       this.replaceKeyFields(item, 'local');
       localStorage.setItem("" + this.name + "-" + item.id, JSON.stringify(item));
       this.allRecords.add(item.id);
       return item;
     };
 
-    Storage.prototype.removeItem = function(item) {
+    Storage.prototype.remove = function(item) {
       localStorage.removeItem("" + this.name + "-" + item.id);
       this.allRecords.remove(item.id);
       return item;
     };
 
+    Storage.prototype.isEmpty = function() {
+      return localStorage.getItem(this.name) === null;
+    };
+
+    Storage.prototype.clear = function() {
+      var collectionKeys, key, keys, record, _i, _j, _len, _len2, _ref, _results,
+        _this = this;
+      keys = Object.keys(localStorage);
+      collectionKeys = _.filter(keys, function(key) {
+        return (new RegExp(_this.name)).test(key);
+      });
+      for (_i = 0, _len = collectionKeys.length; _i < _len; _i++) {
+        key = collectionKeys[_i];
+        localStorage.removeItem(key);
+      }
+      localStorage.setItem(this.name, '');
+      _ref = [this.allRecords, this.destroyRecords];
+      _results = [];
+      for (_j = 0, _len2 = _ref.length; _j < _len2; _j++) {
+        record = _ref[_j];
+        _results.push(record.reset());
+      }
+      return _results;
+    };
+
     Storage.prototype.replaceKeyFields = function(item, method) {
-      var collection, field, model, newValue, replacedField, wrapper, _ref;
-      model = item.attributes ? item.attributes : item;
+      var collection, field, newValue, replacedField, wrapper, _ref, _ref2, _ref3;
+      if (item.attributes) item = item.attributes;
       _ref = this.keys;
       for (field in _ref) {
         collection = _ref[field];
-        replacedField = model[field];
-        newValue = method === 'local' ? (wrapper = new Offline.Collection(collection), wrapper.get(replacedField).id) : collection.get(replacedField).get('sid');
-        model[field] = newValue;
+        replacedField = item[field];
+        newValue = method === 'local' ? (wrapper = new Offline.Collection(collection), (_ref2 = wrapper.get(replacedField)) != null ? _ref2.id : void 0) : (_ref3 = collection.get(replacedField)) != null ? _ref3.get('sid') : void 0;
+        if (!_.isUndefined(newValue)) item[field] = newValue;
       }
-      return model;
+      return item;
     };
 
-    Storage.prototype.pushItem = function(item) {
+    return Storage;
+
+  })();
+
+  Offline.Sync = (function() {
+
+    function Sync(collection, storage) {
+      this.collection = new Offline.Collection(collection);
+      this.storage = storage;
+    }
+
+    Sync.prototype.full = function(options) {
+      var _this = this;
+      if (options == null) options = {};
+      return Backbone.ajaxSync('read', this.collection.items, {
+        success: function(response, status, xhr) {
+          var item, _i, _len;
+          _this.storage.clear();
+          for (_i = 0, _len = response.length; _i < _len; _i++) {
+            item = response[_i];
+            _this.storage.create(item, {
+              local: true
+            });
+          }
+          _this.collection.items.reset(response);
+          if (options.success) return options.success(response);
+        }
+      });
+    };
+
+    Sync.prototype.incremental = function() {
+      var _this = this;
+      return this.pull({
+        success: function() {
+          return _this.push();
+        }
+      });
+    };
+
+    Sync.prototype.pull = function(options) {
+      var _this = this;
+      if (options == null) options = {};
+      return Backbone.ajaxSync('read', this.collection.items, {
+        success: function(response, status, xhr) {
+          var item, _i, _len;
+          _this.collection.destroyDiff(response);
+          for (_i = 0, _len = response.length; _i < _len; _i++) {
+            item = response[_i];
+            _this.pullItem(item);
+          }
+          if (options.success) return options.success();
+        }
+      });
+    };
+
+    Sync.prototype.pullItem = function(item) {
+      var local;
+      local = this.collection.get(item.id);
+      if (local) {
+        return this.updateItem(item, local);
+      } else {
+        return this.createItem(item);
+      }
+    };
+
+    Sync.prototype.createItem = function(item) {
+      if (!_.include(this.storage.destroyRecords.values, item.id.toString())) {
+        item.sid = item.id;
+        delete item.id;
+        return this.collection.items.create(item, {
+          local: true
+        });
+      }
+    };
+
+    Sync.prototype.updateItem = function(item, model) {
+      if ((new Date(model.get('updated_at'))) < (new Date(item.updated_at))) {
+        delete item.id;
+        return model.save(item, {
+          local: true
+        });
+      }
+    };
+
+    Sync.prototype.push = function() {
+      var item, sid, _i, _j, _len, _len2, _ref, _ref2, _results;
+      _ref = this.collection.dirty();
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        item = _ref[_i];
+        this.pushItem(item);
+      }
+      _ref2 = this.storage.destroyRecords.values;
+      _results = [];
+      for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
+        sid = _ref2[_j];
+        _results.push(this.destroyBySid(sid));
+      }
+      return _results;
+    };
+
+    Sync.prototype.pushItem = function(item) {
       var localId, method, _ref,
         _this = this;
-      this.replaceKeyFields(item, 'server');
+      this.storage.replaceKeyFields(item, 'server');
       localId = item.id;
-      _ref = item.get('sid') === 'new' ? ['create', null] : ['update', item.get('sid')], method = _ref[0], item.id = _ref[1];
+      delete item.attributes.id;
+      _ref = item.get('sid') === 'new' ? ['create', null, null] : ['update', item.attributes.sid], method = _ref[0], item.id = _ref[1];
       return Backbone.ajaxSync(method, item, {
         success: function(response, status, xhr) {
+          item.attributes.id = localId;
           item.id = localId;
           if (method === 'create') {
             item.set({
@@ -298,76 +368,18 @@
       });
     };
 
-    Storage.prototype.destroyBySid = function(sid) {
-      var fakeModel,
+    Sync.prototype.destroyBySid = function(sid) {
+      var model,
         _this = this;
-      fakeModel = new Backbone.Model();
-      fakeModel.id = sid;
-      fakeModel.urlRoot = this.collection.url;
-      return Backbone.ajaxSync('delete', fakeModel, {
+      model = this.collection.fakeModel(sid);
+      return Backbone.ajaxSync('delete', model, {
         success: function(response, status, xhr) {
-          return _this.destroyRecords.remove(sid);
+          return _this.storage.destroyRecords.remove(sid);
         }
       });
     };
 
-    Storage.prototype.isEmpty = function() {
-      return localStorage.getItem(this.name) === null;
-    };
-
-    Storage.prototype.clear = function() {
-      var collectionKeys, key, keys, _i, _len,
-        _this = this;
-      keys = Object.keys(localStorage);
-      collectionKeys = _.filter(keys, function(key) {
-        return (new RegExp(_this.name)).test(key);
-      });
-      for (_i = 0, _len = collectionKeys.length; _i < _len; _i++) {
-        key = collectionKeys[_i];
-        localStorage.removeItem(key);
-      }
-      this.allRecords.reset();
-      return this.destroyRecords.reset();
-    };
-
-    Storage.prototype.removeBySid = function(sid) {
-      var local;
-      local = this.colWrapper.get(sid);
-      return local.destroy({
-        local: true
-      });
-    };
-
-    Storage.prototype.pullItem = function(item) {
-      var local;
-      local = this.colWrapper.get(item.id);
-      if (local) {
-        return this.updateItem(local, item);
-      } else {
-        return this.createItem(item);
-      }
-    };
-
-    Storage.prototype.updateItem = function(local, item) {
-      if ((new Date(local.get('updated_at'))) < (new Date(item.updated_at))) {
-        delete item.id;
-        return local.save(item, {
-          local: true
-        });
-      }
-    };
-
-    Storage.prototype.createItem = function(item) {
-      if (!_.include(this.destroyRecords.values, item.id.toString())) {
-        item.sid = item.id;
-        delete item.id;
-        return this.collection.create(item, {
-          local: true
-        });
-      }
-    };
-
-    return Storage;
+    return Sync;
 
   })();
 

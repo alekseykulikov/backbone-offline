@@ -23,11 +23,26 @@ describe 'Offline.Collection', ->
       @dreams.create(name: 'item 2', sid: '2')
       @dreams.create(name: 'item 3', sid: '3')
 
-      @response = [{name: 'item 1', id: '1'}]
-
     it 'returns array of items to remove', ->
-      expect(@collection.diff(@response)).toEqual(['2', '3'])
+      response = [{name: 'item 1', id: '2'}]
+      expect(@collection.diff(response)).toEqual(['1', '3'])
 
     it 'ignoring items with "new" sid', ->
+      response = [{name: 'item 1', id: '1'}]
       @dreams.create(name: 'item 4', sid: 'new')
-      expect(@collection.diff(@response)).toEqual(['2', '3'])
+      expect(@collection.diff(response)).toEqual(['2', '3'])
+
+  describe 'destroyDiff', ->
+    it 'destroy items by sid', ->
+      @dreams.create(name: 'item 1', sid: '1')
+      @dreams.create(name: 'item 2', sid: '2')
+      @dreams.create(name: 'item 3', sid: '3')
+      response = [{name: 'item 1', id: '2'}]
+
+      @collection.destroyDiff(response)
+      expect(@collection.items.length).toEqual(1)
+
+  describe 'fakeModel', ->
+    beforeEach -> @fakeModel = @collection.fakeModel('4')
+    it 'sets id', -> expect(@fakeModel.id).toEqual('4')
+    it 'sets urlRoot', -> expect(@fakeModel.urlRoot).toEqual('/api/dreams')
