@@ -46,7 +46,7 @@ Initially, the primary task for this library was to create web-app which can wor
 
 Used for working with localStorage and based on a great library [Backbone.localStorage](https://github.com/jeromegn/Backbone.localStorage). `Offline.sync` utilizes methods of class for all CRUD-operations.
 
-It uses field `sid` in order to save server’s id. This field is used when request to server. When creating or changing date, model gets `dirty` attribute which initially equals _true__. The presence of this attribute is a signal for sync with a server, `updated_at` field changes too. This field is used for local comparison of versions with the server. Removed objects are added to special array of `sid` fields and they will be removed from sync with server.
+It uses field `sid` in order to save server’s id. This field is used when request to server. When creating or changing date, model gets `dirty` attribute which initially equals _true_. The presence of this attribute is a signal for sync with a server, `updated_at` field changes too. This field is used for local comparison of versions with the server. Removed objects are added to special array of `sid` fields and they will be removed from sync with server.
 
 ````
 @storage = new Offline.Storage('dreams', this, keys: {tag_id: @tags})
@@ -58,6 +58,7 @@ Optional parameter `keys` is used when your collection has a relation with other
 
 This is an algorithm for syncing local storage with a server. For inspiration was used [Evernote EDAM](http://dev.evernote.com/media/pdf/edam-sync.pdf) algorithm, but later it has been changed significantly.
 The default behavior: synchronization of data with a server occurs on the collection change by using `fetch()`. If you want to sync data with the server more often, you can use an instance methods:
+
 * `full()` — full collection reload
 * `incremental()` — request data from the server with `pull()` and then send changed data to the server with `push()`
 * `push()` - receive data from the server and merge with a current collection
@@ -75,8 +76,6 @@ dreams.save(name: 'Diving with scuba') # local save
 dreams.sync.push() # POST /api/dreams and PUT /api/dreams/:id
 ````
 
-##
-
 ### Examples
 
 [Saveidea](http://saveideanow.com/demo_app) is a web-app for storing ideas, that appear in your mind during the day. It uses this library to work offline in the browser.
@@ -90,6 +89,6 @@ dreams.sync.push() # POST /api/dreams and PUT /api/dreams/:id
 
 To Jerome Gravel-Niquet for [backbone.localStorage](https://github.com/jeromegn/Backbone.localStorage) and Jeremy Ashkenas for [coffee-script](https://github.com/jashkenas/coffee-script) and [backbone.js](https://github.com/documentcloud/backbone)
 
-##
+### License
 
 Licensed under MIT license. © 2012 Aleksey Kulikov, All Rights Reserved
