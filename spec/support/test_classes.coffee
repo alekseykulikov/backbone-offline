@@ -7,4 +7,4 @@ class window.Dreams extends Backbone.Collection
   url: '/api/dreams'
 
   initialize: ->
-    @storage = new Offline.Storage('dreams', this, autoSync: false)
+    @storage = new Offline.Storage('dreams', this)

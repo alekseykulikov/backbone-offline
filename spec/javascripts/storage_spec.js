@@ -20,25 +20,16 @@
           }
         });
       });
-      it('initializes variable @allRecords', function() {
-        return expect(this.itemsStore.allRecords.values).toEqual(['2', '3']);
+      it('sets @allIds', function() {
+        return expect(this.itemsStore.allIds.values).toEqual(['2', '3']);
       });
-      it('initializes variable @destroyRecords', function() {
-        return expect(this.itemsStore.destroyRecords.values).toEqual(['1', '4']);
+      it('sets @destroyIds', function() {
+        return expect(this.itemsStore.destroyIds.values).toEqual(['1', '4']);
       });
-      it('initializes variable @keys by options', function() {
+      return it('sets @keys by options.keys', function() {
         return expect(this.itemsStore.keys).toEqual({
           parent_id: this.dreams
         });
-      });
-      return it('sets default options', function() {
-        var storage;
-        registerFakeAjax({
-          url: '/api/dreams',
-          successData: {}
-        });
-        storage = new Offline.Storage('dreams', this.dreams);
-        return expect(storage.keys).toEqual({});
       });
     });
     describe('create', function() {
@@ -47,26 +38,26 @@
           name: 'Diving with scuba'
         });
       });
-      it('returns model attributes', function() {
+      it("should return model's attributes", function() {
         return expect(this.storage.create(this.dream).name).toEqual('Diving with scuba');
       });
-      it('generates local id for new model', function() {
+      it('should generate local id', function() {
         spyOn(this.storage, 'guid').andReturn('1');
         this.storage.create(this.dream);
         return expect(this.storage.guid).toHaveBeenCalled();
       });
-      it('calls save with new model', function() {
+      it('should call "save"', function() {
         spyOn(this.storage, 'save');
         this.storage.create(this.dream);
         return expect(this.storage.save).toHaveBeenCalledWith(jasmine.any(Object));
       });
-      it('sets updated_at and dirty', function() {
+      it('sets updated_at and dirty attributes', function() {
         var createdModel;
         createdModel = this.storage.create(this.dream);
         expect(createdModel.dirty).toBeTruthy();
         return expect(createdModel.updated_at).toBeDefined();
       });
-      it('does not set updated_at and dirty if local true', function() {
+      it('does not set updated_at and dirty when options = {local: true}', function() {
         var createdModel;
         createdModel = this.storage.create(this.dream, {
           local: true
@@ -74,20 +65,18 @@
         expect(createdModel.dirty).toBeUndefined();
         return expect(createdModel.updated_at).toBeUndefined();
       });
-      return describe('saves sid - server id', function() {
-        it('model id', function() {
-          return expect(this.storage.create({
-            id: 1
-          }).sid).toEqual(1);
-        });
-        it('"new" when model was create localy', function() {
-          return expect(this.storage.create(this.dream).sid).toEqual('new');
-        });
-        return it('model sid attribute if model has it', function() {
-          return expect(this.storage.create({
-            sid: 'abcd'
-          }).sid).toEqual('abcd');
-        });
+      it('should save server id to "sid" attribute', function() {
+        return expect(this.storage.create({
+          id: 1
+        }).sid).toEqual(1);
+      });
+      it('should set "sid" attribute to "new" when model was create locally', function() {
+        return expect(this.storage.create(this.dream).sid).toEqual('new');
+      });
+      return it("should set model's \"sid\" attribute when model has it", function() {
+        return expect(this.storage.create({
+          sid: 'abcd'
+        }).sid).toEqual('abcd');
       });
     });
     describe('update', function() {
@@ -100,7 +89,7 @@
         expect(updatedModel.get('dirty')).toBeTruthy();
         return expect(updatedModel.get('updated_at')).toBeDefined();
       });
-      it('does not set updated_at and dirty if local true', function() {
+      it('does not set updated_at and dirty when options = {local: true}', function() {
         var updatedModel;
         updatedModel = this.storage.update(this.dream, {
           local: true
@@ -108,7 +97,7 @@
         expect(updatedModel.dirty).toBeUndefined();
         return expect(updatedModel.updated_at).toBeUndefined();
       });
-      return it('calls save with model', function() {
+      return it('should call "save"', function() {
         spyOn(this.storage, 'save');
         this.storage.update(this.dream);
         return expect(this.storage.save).toHaveBeenCalledWith(this.dream);
@@ -118,19 +107,19 @@
       beforeEach(function() {
         return this.dream = this.dreams.create();
       });
-      it('calls remove', function() {
+      it('should call "remove"', function() {
         spyOn(this.storage, 'remove');
         this.storage.destroy(this.dream);
         return expect(this.storage.remove).toHaveBeenCalledWith(this.dream);
       });
-      return it('changes @destroyRecords', function() {
+      return it('should change @destroyIds', function() {
         this.dream.set('sid', '1');
         this.storage.destroy(this.dream);
-        return expect(this.storage.destroyRecords.values).toEqual(['1']);
+        return expect(this.storage.destroyIds.values).toEqual(['1']);
       });
     });
     describe('find', function() {
-      return it('returns specified item', function() {
+      return it('should return specified item', function() {
         var dream;
         dream = this.dreams.create();
         return expect(this.storage.find(dream).id).toEqual(dream.id);
@@ -141,15 +130,15 @@
         spyOn(this.storage.sync, 'incremental');
         return spyOn(this.storage.sync, 'full');
       });
-      it('returns all items in collection', function() {
+      it("should return all collection's items", function() {
         this.dreams.create();
         return expect(this.storage.findAll().length).toEqual(1);
       });
-      it('calls incremental sync', function() {
+      it('should call "incremental" sync', function() {
         this.storage.findAll();
         return expect(this.storage.sync.incremental).toHaveBeenCalled();
       });
-      return it('calls full sync when storage is empty', function() {
+      return it('should call "full" sync when storage is empty', function() {
         localStorage.clear();
         this.storage.findAll();
         return expect(this.storage.sync.full).toHaveBeenCalled();
@@ -162,15 +151,15 @@
           name: 'New dream'
         };
       });
-      it('saves item to localStorage', function() {
+      it('should save item to localStorage', function() {
         this.storage.save(this.dream);
         return expect(localStorage.getItem('dreams-abcd')).toEqual(JSON.stringify(this.dream));
       });
-      it('adds to @allRecords when item has new id', function() {
+      it('should add item.id to @allIds', function() {
         this.storage.save(this.dream);
-        return expect(_.include(this.storage.allRecords.values, 'abcd')).toBeTruthy();
+        return expect(_.include(this.storage.allIds.values, 'abcd')).toBeTruthy();
       });
-      return it('calls replaceKeyFields', function() {
+      return it('should call "replaceKeyFields"', function() {
         spyOn(this.storage, 'replaceKeyFields');
         this.storage.save(this.dream);
         return expect(this.storage.replaceKeyFields).toHaveBeenCalledWith(this.dream, 'local');
@@ -183,19 +172,19 @@
         });
         return this.storage.remove(this.dream);
       });
-      it('removes item from localStorage', function() {
+      it('should remove item from localStorage', function() {
         return expect(localStorage.getItem('dreams-dcba')).toBeNull();
       });
-      return it('removes item id from @allRecords', function() {
+      return it('should remove item.id from @allIds', function() {
         return expect(_.include(this.storage.values, 'dcba')).toBeFalsy();
       });
     });
     describe('isEmpty', function() {
-      it('returns true when localStorage item is null', function() {
+      it("should return true when localStorage's key is null", function() {
         localStorage.removeItem('dreams');
         return expect(this.storage.isEmpty()).toBeTruthy();
       });
-      return it('returns false when localStorage has collection-name item', function() {
+      return it('should return false when localStorage has necessary key', function() {
         localStorage.setItem('dreams', '1,2,3');
         return expect(this.storage.isEmpty()).toBeFalsy();
       });
@@ -206,24 +195,24 @@
         localStorage.setItem('dreams-1234', 'id:0002');
         return localStorage.setItem('other', '');
       });
-      it('clears all localStorage items which include collection-name', function() {
+      it("should clear localStorage's items including collection-key", function() {
         this.storage.clear();
         return expect(localStorage.getItem('dreams-1234')).toBeNull();
       });
-      it('sets root record to ""', function() {
+      it('sets collection-key to ""', function() {
         this.storage.clear();
         return expect(localStorage.getItem('dreams')).toEqual('');
       });
-      it('does not clear the other collections', function() {
+      it('does not clear other collections', function() {
         this.storage.clear();
         return expect(localStorage.getItem('other')).toEqual('');
       });
-      return it('resets @allRecords and @destroyRecords', function() {
-        spyOn(this.storage.allRecords, 'reset');
-        spyOn(this.storage.destroyRecords, 'reset');
+      return it('should reset @allIds and @destroyIds', function() {
+        spyOn(this.storage.allIds, 'reset');
+        spyOn(this.storage.destroyIds, 'reset');
         this.storage.clear();
-        expect(this.storage.allRecords.reset).toHaveBeenCalled();
-        return expect(this.storage.destroyRecords.reset).toHaveBeenCalled();
+        expect(this.storage.allIds.reset).toHaveBeenCalled();
+        return expect(this.storage.destroyIds.reset).toHaveBeenCalled();
       });
     });
     return describe('replaceKeyFields', function() {
@@ -242,21 +231,25 @@
           sid: '1'
         });
       });
-      it('replaces server ids to local when method is local', function() {
-        var item;
-        item = this.storage2.replaceKeyFields({
-          name: 'Live in Norvay',
-          parent_id: '1'
-        }, 'local');
-        return expect(item.parent_id).toEqual(this.dream.id);
+      describe('when method is "local"', function() {
+        return it('should replace server ids to local', function() {
+          var item;
+          item = this.storage2.replaceKeyFields({
+            name: 'Live in Norvay',
+            parent_id: '1'
+          }, 'local');
+          return expect(item.parent_id).toEqual(this.dream.id);
+        });
       });
-      return it('replaces local id to server id', function() {
-        var item;
-        item = this.storage2.replaceKeyFields({
-          name: 'Live in Norvay',
-          parent_id: this.dream.id
-        }, 'server');
-        return expect(item.parent_id).toEqual(this.dream.get('sid'));
+      return describe('when method is "server"', function() {
+        return it('should replace local ids to server', function() {
+          var item;
+          item = this.storage2.replaceKeyFields({
+            name: 'Live in Norvay',
+            parent_id: this.dream.id
+          }, 'server');
+          return expect(item.parent_id).toEqual(this.dream.get('sid'));
+        });
       });
     });
   });

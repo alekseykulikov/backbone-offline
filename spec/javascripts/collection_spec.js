@@ -10,7 +10,7 @@
       return localStorage.clear();
     });
     describe('dirty', function() {
-      return it('return items with dirty mark', function() {
+      return it('should return items where "dirty" attribute is equal true', function() {
         this.dreams.add([
           {
             id: 1,
@@ -27,7 +27,7 @@
       });
     });
     describe('get', function() {
-      return it('finds item in collection by sid attribute', function() {
+      return it('should find item by "sid" attribute in collection', function() {
         this.dreams.add([
           {
             name: 'first',
@@ -40,7 +40,7 @@
         return expect(this.collection.get('2').get('name')).toEqual('second');
       });
     });
-    describe('diff', function() {
+    describe('destroyDiff', function() {
       beforeEach(function() {
         this.dreams.create({
           name: 'item 1',
@@ -55,7 +55,7 @@
           sid: '3'
         });
       });
-      it('returns array of items to remove', function() {
+      it('should destroy items by "sid" which difference from response', function() {
         var response;
         response = [
           {
@@ -63,9 +63,10 @@
             id: '2'
           }
         ];
-        return expect(this.collection.diff(response)).toEqual(['1', '3']);
+        this.collection.destroyDiff(response);
+        return expect(this.collection.items.pluck('sid')).toEqual(['2']);
       });
-      return it('ignoring items with "new" sid', function() {
+      return it('should ignore items which have "sid" attribute equal "new"', function() {
         var response;
         response = [
           {
@@ -77,32 +78,8 @@
           name: 'item 4',
           sid: 'new'
         });
-        return expect(this.collection.diff(response)).toEqual(['2', '3']);
-      });
-    });
-    describe('destroyDiff', function() {
-      return it('destroy items by sid', function() {
-        var response;
-        this.dreams.create({
-          name: 'item 1',
-          sid: '1'
-        });
-        this.dreams.create({
-          name: 'item 2',
-          sid: '2'
-        });
-        this.dreams.create({
-          name: 'item 3',
-          sid: '3'
-        });
-        response = [
-          {
-            name: 'item 1',
-            id: '2'
-          }
-        ];
         this.collection.destroyDiff(response);
-        return expect(this.collection.items.length).toEqual(1);
+        return expect(this.collection.items.pluck('sid')).toEqual(['1', 'new']);
       });
     });
     return describe('fakeModel', function() {

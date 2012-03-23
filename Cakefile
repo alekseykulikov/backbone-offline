@@ -13,4 +13,4 @@ task 'build', 'Build lib/ from src/', ->
 
 task 'watch', 'Watch src/ for changes', ->
   runner ['-w', '-c', '-o', 'js', 'src']
-  runner ['-w', '-c', '-o', 'spec/js', 'spec']
+  runner ['-w', '-c', '-o', 'spec/javascripts', 'spec']

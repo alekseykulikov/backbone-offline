@@ -31,9 +31,7 @@
     Dreams.prototype.url = '/api/dreams';
 
     Dreams.prototype.initialize = function() {
-      return this.storage = new Offline.Storage('dreams', this, {
-        autoSync: false
-      });
+      return this.storage = new Offline.Storage('dreams', this);
     };
 
     return Dreams;

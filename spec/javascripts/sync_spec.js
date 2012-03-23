@@ -7,6 +7,9 @@
       this.storage = this.dreams.storage;
       return this.sync = this.storage.sync;
     });
+    afterEach(function() {
+      return localStorage.clear();
+    });
     describe('full', function() {
       beforeEach(function() {
         this.options = {
@@ -26,17 +29,17 @@
           successData: this.response
         });
       });
-      it('clears storage', function() {
+      it('should clear storage', function() {
         spyOn(this.storage, 'clear');
         this.sync.full(this.options);
         return expect(this.storage.clear).toHaveBeenCalled();
       });
-      it('resets collection', function() {
+      it('should reset collection', function() {
         spyOn(this.sync.collection.items, 'reset');
         this.sync.full(this.options);
         return expect(this.sync.collection.items.reset).toHaveBeenCalledWith(this.response);
       });
-      it('requests data from server', function() {
+      it('should request data from server', function() {
         spyOn($, 'ajax');
         this.sync.full(this.options);
         return expect($.ajax).toHaveBeenCalledWith({
@@ -46,9 +49,11 @@
           success: jasmine.any(Function)
         });
       });
-      it('stores received data to localStorage', function() {
+      it('should store received data to localStorage', function() {
         this.sync.full(this.options);
-        return expect(localStorage.length).toEqual(4);
+        localStorage.removeItem('dreams');
+        localStorage.removeItem('dreams-destroy');
+        return expect(localStorage.length).toEqual(3);
       });
       it('does not mark loaded data as dirty', function() {
         var dirties;
@@ -58,7 +63,7 @@
         });
         return expect(dirties.length).toEqual(0);
       });
-      return it('calls options.success with received data', function() {
+      return it('should call "options.success" with received data', function() {
         var callback;
         callback = jasmine.createSpy('-Success Callback-');
         this.options = {
@@ -71,14 +76,14 @@
       });
     });
     describe('incremental', function() {
-      it('calls pull method', function() {
+      it('should call "pull"', function() {
         spyOn(this.sync, 'pull');
         this.sync.incremental();
         return expect(this.sync.pull).toHaveBeenCalledWith({
           success: jasmine.any(Function)
         });
       });
-      return it('calls push method', function() {
+      return it('should call "push"', function() {
         registerFakeAjax({
           url: '/api/dreams',
           successData: {}
@@ -112,7 +117,7 @@
           successData: this.response
         });
       });
-      it('requests data from server', function() {
+      it('should request data from server', function() {
         spyOn($, 'ajax');
         this.sync.pull();
         return expect($.ajax).toHaveBeenCalledWith({
@@ -122,12 +127,12 @@
           success: jasmine.any(Function)
         });
       });
-      it('destroyes old items', function() {
+      it('should destroy old items', function() {
         spyOn(this.sync.collection, 'destroyDiff');
         this.sync.pull();
         return expect(this.sync.collection.destroyDiff).toHaveBeenCalledWith(this.response);
       });
-      return it('calls pullItem for changed items', function() {
+      return it('should call "pullItem" for changed items', function() {
         spyOn(this.sync, 'pullItem');
         this.sync.pull();
         return expect(this.sync.pullItem.callCount).toBe(2);
@@ -143,7 +148,7 @@
           local: true
         });
       });
-      it('updates local item by sid', function() {
+      it("should update local's item by sid", function() {
         this.sync.pullItem({
           id: '1',
           name: 'updated',
@@ -151,7 +156,7 @@
         });
         return expect(this.dream.get('name')).toEqual('updated');
       });
-      return it('creates new item when does not find', function() {
+      return it("should create new item when local's item does not find", function() {
         this.sync.pullItem({
           id: '2',
           name: 'create item'
@@ -167,7 +172,7 @@
         };
         return this.collection = this.dreams.storage.sync.collection;
       });
-      it('creates new item to collection', function() {
+      it('should create new item to collection', function() {
         spyOn(this.dreams, 'create');
         this.sync.createItem(this.item);
         return expect(this.dreams.create).toHaveBeenCalledWith({
@@ -177,7 +182,7 @@
           local: true
         });
       });
-      it('saves item.id to item.sid', function() {
+      it('should save item.id to item.sid', function() {
         this.sync.createItem(this.item);
         return expect(this.collection.get('1')).toBeDefined();
       });
@@ -185,8 +190,8 @@
         this.sync.createItem(this.item);
         return expect(this.collection.get('1').get('dirty')).toBeFalsy();
       });
-      return it('does not create local deleted item', function() {
-        this.storage.destroyRecords.values = ['1'];
+      return it('does not create item which was deleted local', function() {
+        this.storage.destroyIds.values = ['1'];
         this.sync.createItem(this.item);
         return expect(this.collection.get('1')).toBeUndefined();
       });
@@ -205,7 +210,7 @@
           id: '2'
         };
       });
-      it('updates attributes when local updated_at < new updated_at', function() {
+      it('should update attributes when local updated_at < new updated_at', function() {
         this.sync.updateItem(this.item, this.dream);
         return expect(this.dream.get('name')).toEqual('Updated name');
       });
@@ -213,7 +218,7 @@
         this.sync.updateItem(this.item, this.dream);
         return expect(this.dream.get('id')).toNotEqual('1');
       });
-      it('does nothing when local updated_at > new updated_at', function() {
+      it('does nothing when local updated_at greater than new updated_at', function() {
         var callback;
         callback = jasmine.createSpy('-Change Callback-');
         this.dream.on('change', callback);
@@ -227,7 +232,7 @@
       });
     });
     describe('push', function() {
-      it('calls pushItem for dirty items', function() {
+      it('should call "pushItem" for dirty items', function() {
         this.dreams.create();
         this.dreams.create({
           id: '2',
@@ -237,7 +242,7 @@
         this.sync.push();
         return expect(this.sync.pushItem.callCount).toBe(2);
       });
-      return it('calls destroyBySid for destroyed items', function() {
+      return it('should call "destroyBySid" for destroyed items', function() {
         var destroyedDream;
         destroyedDream = this.dreams.create({
           id: '3',
@@ -257,13 +262,12 @@
         beforeEach(function() {
           return this.dream = this.dreams.create();
         });
-        it('calls Backbone.ajaxSync', function() {
+        it('should call Backbone.ajaxSync', function() {
           spyOn(Backbone, 'ajaxSync');
           this.sync.pushItem(this.dream);
-          expect(Backbone.ajaxSync).toHaveBeenCalledWith('create', jasmine.any(Object), {
+          return expect(Backbone.ajaxSync).toHaveBeenCalledWith('create', jasmine.any(Object), {
             success: jasmine.any(Function)
           });
-          return expect(Backbone.ajaxSync.mostRecentCall.args[1].id).toBeNull();
         });
         it('sets dirty to false and sets sid', function() {
           var localId;
@@ -280,7 +284,7 @@
           expect(this.dream.get('sid')).toEqual('12');
           return expect(this.dream.id).toEqual(localId);
         });
-        return it('calls replaceKeyFields', function() {
+        return it('should call "replaceKeyFields"', function() {
           spyOn(this.storage, 'replaceKeyFields');
           spyOn(Backbone, 'ajaxSync');
           this.sync.pushItem(this.dream);
@@ -290,17 +294,15 @@
       return describe('when item exists', function() {
         beforeEach(function() {
           return this.dream = this.dreams.create({
-            id: 'anything',
             sid: '101'
           });
         });
-        it('calls Backbone.ajaxSync', function() {
+        it('should call Backbone.ajaxSync', function() {
           spyOn(Backbone, 'ajaxSync');
           this.sync.pushItem(this.dream);
-          expect(Backbone.ajaxSync).toHaveBeenCalledWith('update', jasmine.any(Object), {
+          return expect(Backbone.ajaxSync).toHaveBeenCalledWith('update', jasmine.any(Object), {
             success: jasmine.any(Function)
           });
-          return expect(Backbone.ajaxSync.mostRecentCall.args[1].id).toEqual('101');
         });
         return it('sets dirty to false', function() {
           var localId;
@@ -323,21 +325,21 @@
           local: true
         }).get('sid');
       });
-      it('calls Backbone.ajaxSync', function() {
+      it('should call Backbone.ajaxSync', function() {
         spyOn(Backbone, 'ajaxSync');
         this.sync.destroyBySid(this.sid);
         return expect(Backbone.ajaxSync).toHaveBeenCalledWith('delete', jasmine.any(Object), {
           success: jasmine.any(Function)
         });
       });
-      return it('clears @destroyRecords', function() {
+      return it('should clear @destroyIds', function() {
         registerFakeAjax({
           url: "/api/dreams/" + this.sid,
           type: 'delete',
           successData: {}
         });
         this.sync.destroyBySid(this.sid);
-        return expect(this.storage.destroyRecords.values).toEqual([]);
+        return expect(this.storage.destroyIds.values).toEqual([]);
       });
     });
   });

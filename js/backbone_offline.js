@@ -1,6 +1,7 @@
 (function() {
 
   window.Offline = {
+    VERSION: '0.1.1',
     localSync: function(method, model, options, store) {
       var resp;
       resp = (function() {
@@ -41,95 +42,15 @@
 
   Backbone.sync = Offline.sync;
 
-  Offline.Records = (function() {
-
-    function Records(name) {
-      var store;
-      this.name = name;
-      store = localStorage.getItem(this.name);
-      this.values = (store && store.split(',')) || [];
-    }
-
-    Records.prototype.add = function(itemId) {
-      if (!_.include(this.values, itemId.toString())) {
-        this.values.push(itemId.toString());
-      }
-      return this.save();
-    };
-
-    Records.prototype.remove = function(itemId) {
-      this.values = _.without(this.values, itemId.toString());
-      return this.save();
-    };
-
-    Records.prototype.save = function() {
-      return localStorage.setItem(this.name, this.values.join(','));
-    };
-
-    Records.prototype.reset = function() {
-      return this.values = [];
-    };
-
-    return Records;
-
-  })();
-
-  Offline.Collection = (function() {
-
-    function Collection(items) {
-      this.items = items;
-    }
-
-    Collection.prototype.dirty = function() {
-      return this.items.filter(function(item) {
-        return item.get('dirty');
-      });
-    };
-
-    Collection.prototype.get = function(sid) {
-      return this.items.find(function(item) {
-        return item.get('sid') === sid;
-      });
-    };
-
-    Collection.prototype.diff = function(response) {
-      return _.difference(_.without(this.items.pluck('sid'), 'new'), _.pluck(response, 'id'));
-    };
-
-    Collection.prototype.destroyDiff = function(response) {
-      var sid, _i, _len, _ref, _ref2, _results;
-      _ref = this.diff(response);
-      _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        sid = _ref[_i];
-        _results.push((_ref2 = this.get(sid)) != null ? _ref2.destroy({
-          local: true
-        }) : void 0);
-      }
-      return _results;
-    };
-
-    Collection.prototype.fakeModel = function(sid) {
-      var model;
-      model = new Backbone.Model();
-      model.id = sid;
-      model.urlRoot = this.items.url;
-      return model;
-    };
-
-    return Collection;
-
-  })();
-
   Offline.Storage = (function() {
 
     function Storage(name, collection, options) {
       this.name = name;
       if (options == null) options = {};
-      this.keys = options.keys || {};
-      this.allRecords = new Offline.Records(this.name);
-      this.destroyRecords = new Offline.Records("" + this.name + "-destroy");
+      this.allIds = new Offline.Index(this.name);
+      this.destroyIds = new Offline.Index("" + this.name + "-destroy");
       this.sync = new Offline.Sync(collection, this);
+      this.keys = options.keys || {};
     }
 
     Storage.prototype.create = function(model, options) {
@@ -138,7 +59,7 @@
       model.sid = model.sid || model.id || 'new';
       model.id = this.guid();
       if (!options.local) {
-        model.updated_at = (new Date).toString();
+        model.updated_at = (new Date()).toJSON();
         model.dirty = true;
       }
       return this.save(model);
@@ -148,7 +69,7 @@
       if (options == null) options = {};
       if (!options.local) {
         model.set({
-          updated_at: (new Date).toString(),
+          updated_at: (new Date()).toJSON(),
           dirty: true
         });
       }
@@ -159,7 +80,7 @@
       var sid;
       if (options == null) options = {};
       if (!(options.local || (sid = model.get('sid')) === 'new')) {
-        this.destroyRecords.add(sid);
+        this.destroyIds.add(sid);
       }
       return this.remove(model);
     };
@@ -175,7 +96,7 @@
       } else {
         this.sync.incremental();
       }
-      _ref = this.allRecords.values;
+      _ref = this.allIds.values;
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         id = _ref[_i];
@@ -195,13 +116,13 @@
     Storage.prototype.save = function(item) {
       this.replaceKeyFields(item, 'local');
       localStorage.setItem("" + this.name + "-" + item.id, JSON.stringify(item));
-      this.allRecords.add(item.id);
+      this.allIds.add(item.id);
       return item;
     };
 
     Storage.prototype.remove = function(item) {
       localStorage.removeItem("" + this.name + "-" + item.id);
-      this.allRecords.remove(item.id);
+      this.allIds.remove(item.id);
       return item;
     };
 
@@ -221,7 +142,7 @@
         localStorage.removeItem(key);
       }
       localStorage.setItem(this.name, '');
-      _ref = [this.allRecords, this.destroyRecords];
+      _ref = [this.allIds, this.destroyIds];
       _results = [];
       for (_j = 0, _len2 = _ref.length; _j < _len2; _j++) {
         record = _ref[_j];
@@ -237,8 +158,10 @@
       for (field in _ref) {
         collection = _ref[field];
         replacedField = item[field];
-        newValue = method === 'local' ? (wrapper = new Offline.Collection(collection), (_ref2 = wrapper.get(replacedField)) != null ? _ref2.id : void 0) : (_ref3 = collection.get(replacedField)) != null ? _ref3.get('sid') : void 0;
-        if (!_.isUndefined(newValue)) item[field] = newValue;
+        if (!/^\w{8}-\w{4}-\w{4}/.test(replacedField) || method !== 'local') {
+          newValue = method === 'local' ? (wrapper = new Offline.Collection(collection), (_ref2 = wrapper.get(replacedField)) != null ? _ref2.id : void 0) : (_ref3 = collection.get(replacedField)) != null ? _ref3.get('sid') : void 0;
+          if (!_.isUndefined(newValue)) item[field] = newValue;
+        }
       }
       return item;
     };
@@ -309,21 +232,23 @@
     };
 
     Sync.prototype.createItem = function(item) {
-      if (!_.include(this.storage.destroyRecords.values, item.id.toString())) {
+      if (!_.include(this.storage.destroyIds.values, item.id.toString())) {
         item.sid = item.id;
         delete item.id;
-        return this.collection.items.create(item, {
+        this.collection.items.create(item, {
           local: true
         });
+        return this.collection.items.trigger('added');
       }
     };
 
     Sync.prototype.updateItem = function(item, model) {
       if ((new Date(model.get('updated_at'))) < (new Date(item.updated_at))) {
         delete item.id;
-        return model.save(item, {
+        model.save(item, {
           local: true
         });
+        return model.trigger('updated');
       }
     };
 
@@ -334,7 +259,7 @@
         item = _ref[_i];
         this.pushItem(item);
       }
-      _ref2 = this.storage.destroyRecords.values;
+      _ref2 = this.storage.destroyIds.values;
       _results = [];
       for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
         sid = _ref2[_j];
@@ -349,11 +274,9 @@
       this.storage.replaceKeyFields(item, 'server');
       localId = item.id;
       delete item.attributes.id;
-      _ref = item.get('sid') === 'new' ? ['create', null, null] : ['update', item.attributes.sid], method = _ref[0], item.id = _ref[1];
-      return Backbone.ajaxSync(method, item, {
+      _ref = item.get('sid') === 'new' ? ['create', null] : ['update', item.attributes.sid], method = _ref[0], item.id = _ref[1];
+      Backbone.ajaxSync(method, item, {
         success: function(response, status, xhr) {
-          item.attributes.id = localId;
-          item.id = localId;
           if (method === 'create') {
             item.set({
               sid: response.id
@@ -366,6 +289,8 @@
           });
         }
       });
+      item.attributes.id = localId;
+      return item.id = localId;
     };
 
     Sync.prototype.destroyBySid = function(sid) {
@@ -374,7 +299,7 @@
       model = this.collection.fakeModel(sid);
       return Backbone.ajaxSync('delete', model, {
         success: function(response, status, xhr) {
-          return _this.storage.destroyRecords.remove(sid);
+          return _this.storage.destroyIds.remove(sid);
         }
       });
     };
@@ -382,5 +307,83 @@
     return Sync;
 
   })();
+
+  Offline.Index = (function() {
+
+    function Index(name) {
+      var store;
+      this.name = name;
+      store = localStorage.getItem(this.name);
+      this.values = (store && store.split(',')) || [];
+    }
+
+    Index.prototype.add = function(itemId) {
+      if (!_.include(this.values, itemId.toString())) {
+        this.values.push(itemId.toString());
+      }
+      return this.save();
+    };
+
+    Index.prototype.remove = function(itemId) {
+      this.values = _.without(this.values, itemId.toString());
+      return this.save();
+    };
+
+    Index.prototype.save = function() {
+      return localStorage.setItem(this.name, this.values.join(','));
+    };
+
+    Index.prototype.reset = function() {
+      this.values = [];
+      return this.save();
+    };
+
+    return Index;
+
+  })();
+
+  Offline.Collection = (function() {
+
+    function Collection(items) {
+      this.items = items;
+    }
+
+    Collection.prototype.dirty = function() {
+      return this.items.filter(function(item) {
+        return item.get('dirty');
+      });
+    };
+
+    Collection.prototype.get = function(sid) {
+      return this.items.find(function(item) {
+        return item.get('sid') === sid;
+      });
+    };
+
+    return Collection;
+
+  })();
+
+  old(models(from(the(collection(which(have(!marked(as("new", {
+    destroyDiff: function(response) {
+      var diff, sid, _i, _len, _ref, _results;
+      diff = _.difference(_.without(this.items.pluck('sid'), 'new'), _.pluck(response, 'id'));
+      _results = [];
+      for (_i = 0, _len = diff.length; _i < _len; _i++) {
+        sid = diff[_i];
+        _results.push((_ref = this.get(sid)) != null ? _ref.destroy({
+          local: true
+        }) : void 0);
+      }
+      return _results;
+    },
+    fakeModel: function(sid) {
+      var model;
+      model = new Backbone.Model();
+      model.id = sid;
+      model.urlRoot = this.items.url;
+      return model;
+    }
+  })))))))));
 
 }).call(this);

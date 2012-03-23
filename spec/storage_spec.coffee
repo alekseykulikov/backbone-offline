@@ -13,47 +13,45 @@ describe 'Offline.Storage', ->
       localStorage.setItem('items-destroy', '1,4')
       @itemsStore = new Offline.Storage('items', [], autoSync: false, keys: {parent_id: @dreams})
 
-    it 'initializes variable @allRecords', -> expect(@itemsStore.allRecords.values).toEqual(['2', '3'])
-    it 'initializes variable @destroyRecords', -> expect(@itemsStore.destroyRecords.values).toEqual(['1', '4'])
-    it 'initializes variable @keys by options', -> expect(@itemsStore.keys).toEqual(parent_id: @dreams)
-
-    it 'sets default options', ->
-      registerFakeAjax url: '/api/dreams', successData: {}
-      storage = new Offline.Storage('dreams', @dreams)
-
-      expect(storage.keys).toEqual({})
+    it 'sets @allIds', -> expect(@itemsStore.allIds.values).toEqual(['2', '3'])
+    it 'sets @destroyIds', -> expect(@itemsStore.destroyIds.values).toEqual(['1', '4'])
+    it 'sets @keys by options.keys', -> expect(@itemsStore.keys).toEqual(parent_id: @dreams)
 
   describe 'create', ->
     beforeEach ->
       @dream = new Dream(name: 'Diving with scuba')
 
-    it 'returns model attributes', ->
+    it "should return model's attributes", ->
       expect(@storage.create(@dream).name).toEqual('Diving with scuba')
 
-    it 'generates local id for new model', ->
+    it 'should generate local id', ->
       spyOn(@storage, 'guid').andReturn('1')
       @storage.create(@dream)
       expect(@storage.guid).toHaveBeenCalled()
 
-    it 'calls save with new model', ->
+    it 'should call "save"', ->
       spyOn(@storage, 'save')
       @storage.create(@dream)
       expect(@storage.save).toHaveBeenCalledWith(jasmine.any(Object))
 
-    it 'sets updated_at and dirty', ->
+    it 'sets updated_at and dirty attributes', ->
       createdModel = @storage.create(@dream)
       expect(createdModel.dirty).toBeTruthy()
       expect(createdModel.updated_at).toBeDefined()
 
-    it 'does not set updated_at and dirty if local true', ->
+    it 'does not set updated_at and dirty when options = {local: true}', ->
       createdModel = @storage.create(@dream, local: true)
       expect(createdModel.dirty).toBeUndefined()
       expect(createdModel.updated_at).toBeUndefined()
 
-    describe 'saves sid - server id', ->
-      it 'model id', -> expect(@storage.create(id: 1).sid).toEqual(1)
-      it '"new" when model was create localy', -> expect(@storage.create(@dream).sid).toEqual('new')
-      it 'model sid attribute if model has it', -> expect(@storage.create(sid: 'abcd').sid).toEqual('abcd')
+    it 'should save server id to "sid" attribute', ->
+      expect(@storage.create(id: 1).sid).toEqual(1)
+
+    it 'should set "sid" attribute to "new" when model was create locally', ->
+      expect(@storage.create(@dream).sid).toEqual('new')
+
+    it "should set model's \"sid\" attribute when model has it", ->
+      expect(@storage.create(sid: 'abcd').sid).toEqual('abcd')
 
   describe 'update', ->
     beforeEach ->
@@ -64,12 +62,12 @@ describe 'Offline.Storage', ->
       expect(updatedModel.get 'dirty').toBeTruthy()
       expect(updatedModel.get 'updated_at').toBeDefined()
 
-    it 'does not set updated_at and dirty if local true', ->
+    it 'does not set updated_at and dirty when options = {local: true}', ->
       updatedModel = @storage.update(@dream, local: true)
       expect(updatedModel.dirty).toBeUndefined()
       expect(updatedModel.updated_at).toBeUndefined()
 
-    it 'calls save with model', ->
+    it 'should call "save"', ->
       spyOn(@storage, 'save')
       @storage.update(@dream)
       expect(@storage.save).toHaveBeenCalledWith(@dream)
@@ -78,18 +76,18 @@ describe 'Offline.Storage', ->
     beforeEach ->
       @dream = @dreams.create()
 
-    it 'calls remove', ->
+    it 'should call "remove"', ->
       spyOn(@storage, 'remove')
       @storage.destroy(@dream)
       expect(@storage.remove).toHaveBeenCalledWith(@dream)
 
-    it 'changes @destroyRecords', ->
+    it 'should change @destroyIds', ->
       @dream.set 'sid', '1'
       @storage.destroy(@dream)
-      expect(@storage.destroyRecords.values).toEqual(['1'])
+      expect(@storage.destroyIds.values).toEqual(['1'])
 
   describe 'find', ->
-    it 'returns specified item', ->
+    it 'should return specified item', ->
       dream = @dreams.create()
       expect(@storage.find(dream).id).toEqual(dream.id)
 
@@ -98,15 +96,15 @@ describe 'Offline.Storage', ->
       spyOn(@storage.sync, 'incremental')
       spyOn(@storage.sync, 'full')
 
-    it 'returns all items in collection', ->
+    it "should return all collection's items", ->
       @dreams.create()
       expect(@storage.findAll().length).toEqual(1)
 
-    it 'calls incremental sync', ->
+    it 'should call "incremental" sync', ->
       @storage.findAll()
       expect(@storage.sync.incremental).toHaveBeenCalled()
 
-    it 'calls full sync when storage is empty', ->
+    it 'should call "full" sync when storage is empty', ->
       localStorage.clear()
       @storage.findAll()
       expect(@storage.sync.full).toHaveBeenCalled()
@@ -115,15 +113,15 @@ describe 'Offline.Storage', ->
     beforeEach ->
       @dream = {id: 'abcd', name: 'New dream'}
 
-    it 'saves item to localStorage', ->
+    it 'should save item to localStorage', ->
       @storage.save(@dream)
       expect(localStorage.getItem 'dreams-abcd').toEqual(JSON.stringify @dream)
 
-    it 'adds to @allRecords when item has new id', ->
+    it 'should add item.id to @allIds', ->
       @storage.save(@dream)
-      expect(_.include @storage.allRecords.values, 'abcd').toBeTruthy()
+      expect(_.include @storage.allIds.values, 'abcd').toBeTruthy()
 
-    it 'calls replaceKeyFields', ->
+    it 'should call "replaceKeyFields"', ->
       spyOn(@storage, 'replaceKeyFields')
       @storage.save(@dream)
       expect(@storage.replaceKeyFields).toHaveBeenCalledWith(@dream, 'local')
@@ -133,15 +131,15 @@ describe 'Offline.Storage', ->
       @dream = @dreams.create(id: 'dcba')
       @storage.remove(@dream)
 
-    it 'removes item from localStorage', -> expect(localStorage.getItem 'dreams-dcba').toBeNull()
-    it 'removes item id from @allRecords', -> expect(_.include @storage.values, 'dcba').toBeFalsy()
+    it 'should remove item from localStorage', -> expect(localStorage.getItem 'dreams-dcba').toBeNull()
+    it 'should remove item.id from @allIds', -> expect(_.include @storage.values, 'dcba').toBeFalsy()
 
   describe 'isEmpty', ->
-    it 'returns true when localStorage item is null', ->
+    it "should return true when localStorage's key is null", ->
       localStorage.removeItem('dreams')
       expect(@storage.isEmpty()).toBeTruthy()
 
-    it 'returns false when localStorage has collection-name item', ->
+    it 'should return false when localStorage has necessary key', ->
       localStorage.setItem('dreams', '1,2,3')
       expect(@storage.isEmpty()).toBeFalsy()
 
@@ -151,25 +149,25 @@ describe 'Offline.Storage', ->
       localStorage.setItem('dreams-1234', 'id:0002')
       localStorage.setItem('other', '')
 
-    it 'clears all localStorage items which include collection-name', ->
+    it "should clear localStorage's items including collection-key", ->
       @storage.clear()
       expect(localStorage.getItem('dreams-1234')).toBeNull()
 
-    it 'sets root record to ""', ->
+    it 'sets collection-key to ""', ->
       @storage.clear()
       expect(localStorage.getItem('dreams')).toEqual('')
 
-    it 'does not clear the other collections', ->
+    it 'does not clear other collections', ->
       @storage.clear()
       expect(localStorage.getItem('other')).toEqual('')
 
-    it 'resets @allRecords and @destroyRecords', ->
-      spyOn(@storage.allRecords, 'reset')
-      spyOn(@storage.destroyRecords, 'reset')
+    it 'should reset @allIds and @destroyIds', ->
+      spyOn(@storage.allIds, 'reset')
+      spyOn(@storage.destroyIds, 'reset')
       @storage.clear()
 
-      expect(@storage.allRecords.reset).toHaveBeenCalled()
-      expect(@storage.destroyRecords.reset).toHaveBeenCalled()
+      expect(@storage.allIds.reset).toHaveBeenCalled()
+      expect(@storage.destroyIds.reset).toHaveBeenCalled()
 
   describe 'replaceKeyFields', ->
     beforeEach ->
@@ -179,10 +177,12 @@ describe 'Offline.Storage', ->
       @childDreams.storage = @storage2
       @dream = @dreams.create name: 'Visit Norway', sid: '1'
 
-    it 'replaces server ids to local when method is local', ->
-      item = @storage2.replaceKeyFields({name: 'Live in Norvay', parent_id: '1'}, 'local')
-      expect(item.parent_id).toEqual @dream.id
+    describe 'when method is "local"', ->
+      it 'should replace server ids to local', ->
+        item = @storage2.replaceKeyFields({name: 'Live in Norvay', parent_id: '1'}, 'local')
+        expect(item.parent_id).toEqual @dream.id
 
-    it 'replaces local id to server id', ->
-      item = @storage2.replaceKeyFields({name: 'Live in Norvay', parent_id: @dream.id}, 'server')
-      expect(item.parent_id).toEqual @dream.get 'sid'
+    describe 'when method is "server"', ->
+      it 'should replace local ids to server', ->
+        item = @storage2.replaceKeyFields({name: 'Live in Norvay', parent_id: @dream.id}, 'server')
+        expect(item.parent_id).toEqual @dream.get 'sid'

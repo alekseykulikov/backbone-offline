@@ -5,49 +5,54 @@ describe 'Offline.Sync', ->
     @storage = @dreams.storage
     @sync = @storage.sync
 
+  afterEach ->
+    localStorage.clear()
+
   describe 'full', ->
     beforeEach ->
       @options = success: (resp) ->
       @response = [{name: 'Dream 1'}, {name: 'Dream 2'}, {name: 'Dream 3'}]
       registerFakeAjax url: '/api/dreams', successData: @response
 
-    it 'clears storage', ->
+    it 'should clear storage', ->
       spyOn(@storage, 'clear')
       @sync.full(@options)
       expect(@storage.clear).toHaveBeenCalled()
 
-    it 'resets collection', ->
+    it 'should reset collection', ->
       spyOn(@sync.collection.items, 'reset')
       @sync.full(@options)
       expect(@sync.collection.items.reset).toHaveBeenCalledWith(@response)
 
-    it 'requests data from server', ->
+    it 'should request data from server', ->
       spyOn($, 'ajax')
       @sync.full(@options)
       expect($.ajax).toHaveBeenCalledWith type: 'GET', dataType: 'json', url: '/api/dreams', success: jasmine.any(Function)
 
-    it 'stores received data to localStorage', ->
+    it 'should store received data to localStorage', ->
       @sync.full(@options)
-      expect(localStorage.length).toEqual(4)
+      localStorage.removeItem('dreams')
+      localStorage.removeItem('dreams-destroy')
+      expect(localStorage.length).toEqual(3)
 
     it 'does not mark loaded data as dirty', ->
       @sync.full(@options)
       dirties = @dreams.filter (dream) -> dream.get('dirty')
       expect(dirties.length).toEqual(0)
 
-    it 'calls options.success with received data', ->
+    it 'should call "options.success" with received data', ->
       callback = jasmine.createSpy('-Success Callback-')
       @options = success: (resp) -> callback(resp)
       @sync.full(@options)
       expect(callback).toHaveBeenCalledWith(@response)
 
   describe 'incremental', ->
-    it 'calls pull method', ->
+    it 'should call "pull"', ->
       spyOn(@sync, 'pull')
       @sync.incremental()
       expect(@sync.pull).toHaveBeenCalledWith(success: jasmine.any(Function))
 
-    it 'calls push method', ->
+    it 'should call "push"', ->
       registerFakeAjax url: '/api/dreams', successData: {}
       spyOn(@sync, 'push')
       @sync.incremental()
@@ -61,17 +66,17 @@ describe 'Offline.Sync', ->
       @response = [{name: 'updated item 2', id: '2'}, {name: 'item 3', id: '3'}]
       registerFakeAjax url: '/api/dreams', successData: @response
 
-    it 'requests data from server', ->
+    it 'should request data from server', ->
       spyOn($, 'ajax')
       @sync.pull()
       expect($.ajax).toHaveBeenCalledWith type: 'GET', dataType: 'json', url: '/api/dreams', success: jasmine.any(Function)
 
-    it 'destroyes old items', ->
+    it 'should destroy old items', ->
       spyOn(@sync.collection, 'destroyDiff')
       @sync.pull()
       expect(@sync.collection.destroyDiff).toHaveBeenCalledWith(@response)
 
-    it 'calls pullItem for changed items', ->
+    it 'should call "pullItem" for changed items', ->
       spyOn(@sync, 'pullItem')
       @sync.pull()
       expect(@sync.pullItem.callCount).toBe(2)
@@ -80,11 +85,11 @@ describe 'Offline.Sync', ->
     beforeEach ->
       @dream = @dreams.create({name: 'simple item', updated_at: '2012-03-04T14:00:10Z', sid: '1'}, {local: true})
 
-    it 'updates local item by sid', ->
+    it "should update local's item by sid", ->
       @sync.pullItem(id: '1', name: 'updated', updated_at: '2012-03-05T14:00:10Z')
       expect(@dream.get 'name').toEqual('updated')
 
-    it 'creates new item when does not find', ->
+    it "should create new item when local's item does not find", ->
       @sync.pullItem(id: '2', name: 'create item')
       expect(@sync.collection.get('2').get 'name').toEqual('create item')
 
@@ -93,12 +98,12 @@ describe 'Offline.Sync', ->
       @item = name: 'New', id: '1'
       @collection = @dreams.storage.sync.collection
 
-    it 'creates new item to collection', ->
+    it 'should create new item to collection', ->
       spyOn(@dreams, 'create')
       @sync.createItem(@item)
       expect(@dreams.create).toHaveBeenCalledWith {name: 'New', sid: '1'}, {local: true}
 
-    it 'saves item.id to item.sid', ->
+    it 'should save item.id to item.sid', ->
       @sync.createItem(@item)
       expect(@collection.get '1').toBeDefined()
 
@@ -106,8 +111,8 @@ describe 'Offline.Sync', ->
       @sync.createItem(@item)
       expect(@collection.get('1').get 'dirty').toBeFalsy()
 
-    it 'does not create local deleted item', ->
-      @storage.destroyRecords.values = ['1']
+    it 'does not create item which was deleted local', ->
+      @storage.destroyIds.values = ['1']
       @sync.createItem(@item)
       expect(@collection.get '1').toBeUndefined()
 
@@ -116,7 +121,7 @@ describe 'Offline.Sync', ->
       @dream = @dreams.create({updated_at: '2012-03-04T14:00:10Z', sid: '2'}, {local: true})
       @item = name: 'Updated name', updated_at: '2012-03-04T14:31:40Z', id: '2'
 
-    it 'updates attributes when local updated_at < new updated_at', ->
+    it 'should update attributes when local updated_at < new updated_at', ->
       @sync.updateItem(@item, @dream)
       expect(@dream.get 'name').toEqual('Updated name')
 
@@ -124,7 +129,7 @@ describe 'Offline.Sync', ->
       @sync.updateItem(@item, @dream)
       expect(@dream.get 'id').toNotEqual('1')
 
-    it 'does nothing when local updated_at > new updated_at', ->
+    it 'does nothing when local updated_at greater than new updated_at', ->
       callback = jasmine.createSpy('-Change Callback-')
       @dream.on('change', callback)
       @item.updated_at = '2012-03-04T12:10:10Z'
@@ -135,9 +140,8 @@ describe 'Offline.Sync', ->
       @sync.updateItem(@item, @dream)
       expect(@dream.get 'dirty').toBeFalsy()
 
-
   describe 'push', ->
-    it 'calls pushItem for dirty items', ->
+    it 'should call "pushItem" for dirty items', ->
       @dreams.create()
       @dreams.create(id: '2', name: 'Diving with scuba')
       spyOn(@sync, 'pushItem')
@@ -145,7 +149,7 @@ describe 'Offline.Sync', ->
       @sync.push()
       expect(@sync.pushItem.callCount).toBe(2)
 
-    it 'calls destroyBySid for destroyed items', ->
+    it 'should call "destroyBySid" for destroyed items', ->
       destroyedDream = @dreams.create({id: '3', name: 'Learning to play on sax', sid: '3'}, {local: true})
       destroyedDream.destroy()
       spyOn(@sync, 'destroyBySid')
@@ -158,11 +162,10 @@ describe 'Offline.Sync', ->
       beforeEach ->
         @dream = @dreams.create()
 
-      it 'calls Backbone.ajaxSync', ->
+      it 'should call Backbone.ajaxSync', ->
         spyOn(Backbone, 'ajaxSync')
         @sync.pushItem(@dream)
         expect(Backbone.ajaxSync).toHaveBeenCalledWith('create', jasmine.any(Object), {success: jasmine.any(Function)})
-        expect(Backbone.ajaxSync.mostRecentCall.args[1].id).toBeNull()
 
       it 'sets dirty to false and sets sid', ->
         registerFakeAjax url: '/api/dreams', type: 'post', successData: {id: '12'}
@@ -173,7 +176,7 @@ describe 'Offline.Sync', ->
         expect(@dream.get 'sid').toEqual('12')
         expect(@dream.id).toEqual(localId)
 
-      it 'calls replaceKeyFields', ->
+      it 'should call "replaceKeyFields"', ->
         spyOn(@storage, 'replaceKeyFields')
         spyOn(Backbone, 'ajaxSync')
         @sync.pushItem(@dream)
@@ -181,14 +184,13 @@ describe 'Offline.Sync', ->
 
     describe 'when item exists', ->
       beforeEach ->
-        @dream = @dreams.create(id: 'anything', sid: '101')
+        @dream = @dreams.create(sid: '101')
 
-      it 'calls Backbone.ajaxSync', ->
+      it 'should call Backbone.ajaxSync', ->
         spyOn(Backbone, 'ajaxSync')
         @sync.pushItem(@dream)
 
         expect(Backbone.ajaxSync).toHaveBeenCalledWith('update', jasmine.any(Object), {success: jasmine.any(Function)})
-        expect(Backbone.ajaxSync.mostRecentCall.args[1].id).toEqual('101')
 
       it 'sets dirty to false', ->
         registerFakeAjax url: "/api/dreams/101", type: 'put', successData: {}
@@ -202,12 +204,12 @@ describe 'Offline.Sync', ->
     beforeEach ->
       @sid = @dreams.create(sid: '3', local: true).get('sid')
 
-    it 'calls Backbone.ajaxSync', ->
+    it 'should call Backbone.ajaxSync', ->
       spyOn(Backbone, 'ajaxSync')
       @sync.destroyBySid(@sid)
       expect(Backbone.ajaxSync).toHaveBeenCalledWith('delete', jasmine.any(Object), {success: jasmine.any(Function)})
 
-    it 'clears @destroyRecords', ->
+    it 'should clear @destroyIds', ->
       registerFakeAjax url: "/api/dreams/#{@sid}", type: 'delete', successData: {}
       @sync.destroyBySid(@sid)
-      expect(@storage.destroyRecords.values).toEqual([])
+      expect(@storage.destroyIds.values).toEqual([])
