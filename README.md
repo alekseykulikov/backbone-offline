@@ -46,7 +46,7 @@ Initially, the primary task for this library was to create web-app which can wor
 
 Used for working with localStorage and based on a great library [Backbone.localStorage](https://github.com/jeromegn/Backbone.localStorage). `Offline.sync` utilizes methods of class for all CRUD-operations.
 
-It uses field `sid` in order to save server’s id. This field is used when request to server. When creating or changing date, model gets `dirty` attribute which initially equals _true_. The presence of this attribute is a signal for sync with a server, `updated_at` field changes too. This field is used for local comparison of versions with the server. Removed objects are added to special array of `sid` fields and they will be removed from sync with server.
+It uses field `sid` in order to save server’s id. This field is used when request to server. When creating or changing data, model gets `dirty` attribute which initially equals _true_. The presence of this attribute is a signal for sync with a server, `updated_at` field changes too. This field is used for local comparison of versions with the server. Removed objects are added to special array of `sid` fields and they will be removed from sync with server.
 
 ````
 @storage = new Offline.Storage('dreams', this, keys: {tag_id: @tags})
