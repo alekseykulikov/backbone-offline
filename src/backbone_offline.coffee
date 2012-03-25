@@ -1,5 +1,5 @@
 #    Backbone.offline allows your Backbone.js app to work offline
-#    https://github.com/Ask11/bacbone.offline
+#    https://github.com/Ask11/backbone.offline
 #
 #    (c) 2012 - Aleksey Kulikov
 #    May be freely distributed according to MIT license.
@@ -275,7 +275,8 @@ class Offline.Collection
   # Get a model from the set by sid.
   get: (sid) ->
     @items.find (item) -> item.get('sid') is sid
- old models from the collection which have not marked as "new"
+
+  # destory old models from the collection which have not marked as "new"
   destroyDiff: (response) ->
     diff = _.difference(_.without(@items.pluck('sid'), 'new'), _.pluck(response, 'id'))
     this.get(sid)?.destroy(local: true) for sid in diff

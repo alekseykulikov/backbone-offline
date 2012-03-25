@@ -360,12 +360,7 @@
       });
     };
 
-    return Collection;
-
-  })();
-
-  old(models(from(the(collection(which(have(!marked(as("new", {
-    destroyDiff: function(response) {
+    Collection.prototype.destroyDiff = function(response) {
       var diff, sid, _i, _len, _ref, _results;
       diff = _.difference(_.without(this.items.pluck('sid'), 'new'), _.pluck(response, 'id'));
       _results = [];
@@ -376,14 +371,18 @@
         }) : void 0);
       }
       return _results;
-    },
-    fakeModel: function(sid) {
+    };
+
+    Collection.prototype.fakeModel = function(sid) {
       var model;
       model = new Backbone.Model();
       model.id = sid;
       model.urlRoot = this.items.url;
       return model;
-    }
-  })))))))));
+    };
+
+    return Collection;
+
+  })();
 
 }).call(this);
