@@ -54,26 +54,18 @@
     }
 
     Storage.prototype.create = function(model, options) {
+      var _ref, _ref2;
       if (options == null) options = {};
-      if (model.attributes) model = model.attributes;
-      model.sid = model.sid || model.id || 'new';
-      model.id = this.guid();
-      if (!options.local) {
-        model.updated_at = (new Date()).toJSON();
-        model.dirty = true;
-      }
-      return this.save(model);
+      model.set({
+        sid: ((_ref = model.attributes) != null ? _ref.sid : void 0) || ((_ref2 = model.attributes) != null ? _ref2.id : void 0) || 'new',
+        id: this.guid()
+      });
+      return this.save(model, options);
     };
 
     Storage.prototype.update = function(model, options) {
       if (options == null) options = {};
-      if (!options.local) {
-        model.set({
-          updated_at: (new Date()).toJSON(),
-          dirty: true
-        });
-      }
-      return this.save(model);
+      return this.save(model, options);
     };
 
     Storage.prototype.destroy = function(model, options) {
@@ -113,7 +105,14 @@
       return this.s4() + this.s4() + '-' + this.s4() + '-' + this.s4() + '-' + this.s4() + '-' + this.s4() + this.s4() + this.s4();
     };
 
-    Storage.prototype.save = function(item) {
+    Storage.prototype.save = function(item, options) {
+      if (options == null) options = {};
+      if (!options.local) {
+        item.set({
+          updated_at: (new Date()).toJSON(),
+          dirty: true
+        });
+      }
       this.replaceKeyFields(item, 'local');
       localStorage.setItem("" + this.name + "-" + item.id, JSON.stringify(item));
       this.allIds.add(item.id);
@@ -186,7 +185,7 @@
           _this.storage.clear();
           for (_i = 0, _len = response.length; _i < _len; _i++) {
             item = response[_i];
-            _this.storage.create(item, {
+            _this.collection.items.create(item, {
               local: true
             });
           }
@@ -349,8 +348,8 @@
     }
 
     Collection.prototype.dirty = function() {
-      return this.items.filter(function(item) {
-        return item.get('dirty');
+      return this.items.where({
+        dirty: true
       });
     };
 

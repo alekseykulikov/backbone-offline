@@ -39,7 +39,7 @@
         });
       });
       it("should return model's attributes", function() {
-        return expect(this.storage.create(this.dream).name).toEqual('Diving with scuba');
+        return expect(this.storage.create(this.dream).get('name')).toEqual('Diving with scuba');
       });
       it('should generate local id', function() {
         spyOn(this.storage, 'guid').andReturn('1');
@@ -49,13 +49,13 @@
       it('should call "save"', function() {
         spyOn(this.storage, 'save');
         this.storage.create(this.dream);
-        return expect(this.storage.save).toHaveBeenCalledWith(jasmine.any(Object));
+        return expect(this.storage.save).toHaveBeenCalledWith(jasmine.any(Object), {});
       });
       it('sets updated_at and dirty attributes', function() {
         var createdModel;
         createdModel = this.storage.create(this.dream);
-        expect(createdModel.dirty).toBeTruthy();
-        return expect(createdModel.updated_at).toBeDefined();
+        expect(createdModel.get('dirty')).toBeTruthy();
+        return expect(createdModel.get('updated_at')).toBeDefined();
       });
       it('does not set updated_at and dirty when options = {local: true}', function() {
         var createdModel;
@@ -66,17 +66,17 @@
         return expect(createdModel.updated_at).toBeUndefined();
       });
       it('should save server id to "sid" attribute', function() {
-        return expect(this.storage.create({
+        return expect(this.storage.create(new Dream({
           id: 1
-        }).sid).toEqual(1);
+        })).get('sid')).toEqual(1);
       });
       it('should set "sid" attribute to "new" when model was create locally', function() {
-        return expect(this.storage.create(this.dream).sid).toEqual('new');
+        return expect(this.storage.create(this.dream).get('sid')).toEqual('new');
       });
       return it("should set model's \"sid\" attribute when model has it", function() {
-        return expect(this.storage.create({
+        return expect(this.storage.create(new Dream({
           sid: 'abcd'
-        }).sid).toEqual('abcd');
+        })).get('sid')).toEqual('abcd');
       });
     });
     describe('update', function() {
@@ -100,7 +100,7 @@
       return it('should call "save"', function() {
         spyOn(this.storage, 'save');
         this.storage.update(this.dream);
-        return expect(this.storage.save).toHaveBeenCalledWith(this.dream);
+        return expect(this.storage.save).toHaveBeenCalledWith(this.dream, {});
       });
     });
     describe('destroy', function() {
@@ -146,10 +146,10 @@
     });
     describe('save', function() {
       beforeEach(function() {
-        return this.dream = {
+        return this.dream = new Dream({
           id: 'abcd',
           name: 'New dream'
-        };
+        });
       });
       it('should save item to localStorage', function() {
         this.storage.save(this.dream);

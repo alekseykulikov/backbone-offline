@@ -22,7 +22,7 @@ describe 'Offline.Storage', ->
       @dream = new Dream(name: 'Diving with scuba')
 
     it "should return model's attributes", ->
-      expect(@storage.create(@dream).name).toEqual('Diving with scuba')
+      expect(@storage.create(@dream).get 'name').toEqual('Diving with scuba')
 
     it 'should generate local id', ->
       spyOn(@storage, 'guid').andReturn('1')
@@ -32,12 +32,12 @@ describe 'Offline.Storage', ->
     it 'should call "save"', ->
       spyOn(@storage, 'save')
       @storage.create(@dream)
-      expect(@storage.save).toHaveBeenCalledWith(jasmine.any(Object))
+      expect(@storage.save).toHaveBeenCalledWith(jasmine.any(Object), {})
 
     it 'sets updated_at and dirty attributes', ->
       createdModel = @storage.create(@dream)
-      expect(createdModel.dirty).toBeTruthy()
-      expect(createdModel.updated_at).toBeDefined()
+      expect(createdModel.get 'dirty').toBeTruthy()
+      expect(createdModel.get 'updated_at').toBeDefined()
 
     it 'does not set updated_at and dirty when options = {local: true}', ->
       createdModel = @storage.create(@dream, local: true)
@@ -45,13 +45,13 @@ describe 'Offline.Storage', ->
       expect(createdModel.updated_at).toBeUndefined()
 
     it 'should save server id to "sid" attribute', ->
-      expect(@storage.create(id: 1).sid).toEqual(1)
+      expect(@storage.create(new Dream(id: 1)).get 'sid').toEqual(1)
 
     it 'should set "sid" attribute to "new" when model was create locally', ->
-      expect(@storage.create(@dream).sid).toEqual('new')
+      expect(@storage.create(@dream).get 'sid').toEqual('new')
 
     it "should set model's \"sid\" attribute when model has it", ->
-      expect(@storage.create(sid: 'abcd').sid).toEqual('abcd')
+      expect(@storage.create(new Dream(sid: 'abcd')).get 'sid').toEqual('abcd')
 
   describe 'update', ->
     beforeEach ->
@@ -70,7 +70,7 @@ describe 'Offline.Storage', ->
     it 'should call "save"', ->
       spyOn(@storage, 'save')
       @storage.update(@dream)
-      expect(@storage.save).toHaveBeenCalledWith(@dream)
+      expect(@storage.save).toHaveBeenCalledWith(@dream, {})
 
   describe 'destroy', ->
     beforeEach ->
@@ -111,7 +111,7 @@ describe 'Offline.Storage', ->
 
   describe 'save', ->
     beforeEach ->
-      @dream = {id: 'abcd', name: 'New dream'}
+      @dream = new Dream(id: 'abcd', name: 'New dream')
 
     it 'should save item to localStorage', ->
       @storage.save(@dream)

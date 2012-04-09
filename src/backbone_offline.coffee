@@ -62,22 +62,12 @@ class Offline.Storage
   # Add a model, giving it a unique GUID. Server id saving to "sid".
   # Set a sync's attributes updated_at, dirty and add
   create: (model, options = {}) ->
-    model = model.attributes if model.attributes
-    model.sid = model.sid || model.id || 'new'
-    model.id = this.guid()
-
-    unless options.local
-      model.updated_at = (new Date()).toJSON()
-      model.dirty = true
-
-    this.save(model)
+    model.set sid: model.attributes?.sid || model.attributes?.id || 'new', id: this.guid()
+    this.save(model, options)
 
   # Update a model into the set. Set a sync's attributes update_at and dirty.
   update: (model, options = {}) ->
-    unless options.local
-      model.set updated_at: (new Date()).toJSON(), dirty: true
-
-    this.save(model)
+    this.save(model, options)
 
   # Delete a model from the storage
   destroy: (model, options = {}) ->
@@ -101,7 +91,9 @@ class Offline.Storage
   guid: ->
     this.s4() + this.s4() + '-' + this.s4() + '-' + this.s4() + '-' + this.s4() + '-' + this.s4() + this.s4() + this.s4()
 
-  save: (item) ->
+  save: (item, options = {}) ->
+    item.set(updated_at: (new Date()).toJSON(), dirty: true) unless options.local
+
     this.replaceKeyFields(item, 'local')
     localStorage.setItem "#{@name}-#{item.id}", JSON.stringify(item)
     @allIds.add(item.id)
@@ -131,6 +123,7 @@ class Offline.Storage
 
     for field, collection of @keys
       replacedField = item[field]
+
       if !/^\w{8}-\w{4}-\w{4}/.test(replacedField) or method isnt 'local'
         newValue = if method is 'local'
           wrapper = new Offline.Collection(collection)
@@ -157,7 +150,7 @@ class Offline.Sync
   full: (options = {}) ->
     Backbone.ajaxSync 'read', @collection.items, success: (response, status, xhr) =>
       @storage.clear()
-      @storage.create(item, local: true) for item in response
+      @collection.items.create(item, local: true) for item in response
       @collection.items.reset(response)
       options.success(response) if options.success
 
@@ -270,7 +263,7 @@ class Offline.Collection
   # Returns models marked as "dirty" - {dirty: true}
   # That is needy for synchronization with server
   dirty: ->
-    @items.filter (item) -> item.get('dirty')
+    @items.where dirty: true
 
   # Get a model from the set by sid.
   get: (sid) ->
