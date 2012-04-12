@@ -49,7 +49,9 @@
       it('should call "save"', function() {
         spyOn(this.storage, 'save');
         this.storage.create(this.dream);
-        return expect(this.storage.save).toHaveBeenCalledWith(jasmine.any(Object), {});
+        return expect(this.storage.save).toHaveBeenCalledWith(jasmine.any(Object), {
+          regenerateId: true
+        });
       });
       it('sets updated_at and dirty attributes', function() {
         var createdModel;

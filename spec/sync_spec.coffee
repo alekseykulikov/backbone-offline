@@ -11,7 +11,7 @@ describe 'Offline.Sync', ->
   describe 'full', ->
     beforeEach ->
       @options = success: (resp) ->
-      @response = [{name: 'Dream 1'}, {name: 'Dream 2'}, {name: 'Dream 3'}]
+      @response = [{id: '1', name: 'Dream 1'}, {id: '2', name: 'Dream 2'}, {id: '3', name: 'Dream 3'}]
       registerFakeAjax url: '/api/dreams', successData: @response
 
     it 'should clear storage', ->
@@ -20,9 +20,10 @@ describe 'Offline.Sync', ->
       expect(@storage.clear).toHaveBeenCalled()
 
     it 'should reset collection', ->
-      spyOn(@sync.collection.items, 'reset')
+      resetCallback = jasmine.createSpy('-Success Callback-')
+      @sync.collection.items.on('reset', resetCallback)
       @sync.full(@options)
-      expect(@sync.collection.items.reset).toHaveBeenCalledWith(@response)
+      expect(resetCallback).toHaveBeenCalled()
 
     it 'should request data from server', ->
       spyOn($, 'ajax')
@@ -33,7 +34,19 @@ describe 'Offline.Sync', ->
       @sync.full(@options)
       localStorage.removeItem('dreams')
       localStorage.removeItem('dreams-destroy')
+
       expect(localStorage.length).toEqual(3)
+
+    it 'should generate new id and store received data locally', ->
+      @sync.full(@options)
+      expect(@dreams.pluck("sid")).toEqual ['1', '2', '3']
+      expect(id).toMatch(/^\w{8}-\w{4}-\w{4}-\w{4}-\w{12}$/) for id in @dreams.pluck("id")
+
+    it 'should reload collection', ->
+      @dreams.add [{id: '725261a0-4f59-2fe2-4827-f52315414d51', sid: '1', name: 'Dream 1'},
+                   {id: 'b27a0bcb-eb05-1296-fe63-b2a06a7c7943', sid: '2', name: 'Dream 2'}]
+      @sync.full(@options)
+      expect(@dreams.length).toEqual(3)
 
     it 'does not mark loaded data as dirty', ->
       @sync.full(@options)

@@ -32,7 +32,7 @@ describe 'Offline.Storage', ->
     it 'should call "save"', ->
       spyOn(@storage, 'save')
       @storage.create(@dream)
-      expect(@storage.save).toHaveBeenCalledWith(jasmine.any(Object), {})
+      expect(@storage.save).toHaveBeenCalledWith(jasmine.any(Object), {regenerateId: true})
 
     it 'sets updated_at and dirty attributes', ->
       createdModel = @storage.create(@dream)

@@ -54,12 +54,8 @@
     }
 
     Storage.prototype.create = function(model, options) {
-      var _ref, _ref2;
       if (options == null) options = {};
-      model.set({
-        sid: ((_ref = model.attributes) != null ? _ref.sid : void 0) || ((_ref2 = model.attributes) != null ? _ref2.id : void 0) || 'new',
-        id: this.guid()
-      });
+      options.regenerateId = true;
       return this.save(model, options);
     };
 
@@ -106,7 +102,14 @@
     };
 
     Storage.prototype.save = function(item, options) {
+      var _ref, _ref2;
       if (options == null) options = {};
+      if (options.regenerateId) {
+        item.set({
+          sid: ((_ref = item.attributes) != null ? _ref.sid : void 0) || ((_ref2 = item.attributes) != null ? _ref2.id : void 0) || 'new',
+          id: this.guid()
+        });
+      }
       if (!options.local) {
         item.set({
           updated_at: (new Date()).toJSON(),
@@ -183,13 +186,15 @@
         success: function(response, status, xhr) {
           var item, _i, _len;
           _this.storage.clear();
+          _this.collection.items.reset([]);
           for (_i = 0, _len = response.length; _i < _len; _i++) {
             item = response[_i];
             _this.collection.items.create(item, {
-              local: true
+              local: true,
+              regenerateId: true
             });
           }
-          _this.collection.items.reset(response);
+          _this.collection.items.trigger('reset');
           if (options.success) return options.success(response);
         }
       });
@@ -234,20 +239,18 @@
       if (!_.include(this.storage.destroyIds.values, item.id.toString())) {
         item.sid = item.id;
         delete item.id;
-        this.collection.items.create(item, {
+        return this.collection.items.create(item, {
           local: true
         });
-        return this.collection.items.trigger('added');
       }
     };
 
     Sync.prototype.updateItem = function(item, model) {
       if ((new Date(model.get('updated_at'))) < (new Date(item.updated_at))) {
         delete item.id;
-        model.save(item, {
+        return model.save(item, {
           local: true
         });
-        return model.trigger('updated');
       }
     };
 

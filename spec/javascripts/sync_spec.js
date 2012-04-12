@@ -17,10 +17,13 @@
         };
         this.response = [
           {
+            id: '1',
             name: 'Dream 1'
           }, {
+            id: '2',
             name: 'Dream 2'
           }, {
+            id: '3',
             name: 'Dream 3'
           }
         ];
@@ -35,9 +38,11 @@
         return expect(this.storage.clear).toHaveBeenCalled();
       });
       it('should reset collection', function() {
-        spyOn(this.sync.collection.items, 'reset');
+        var resetCallback;
+        resetCallback = jasmine.createSpy('-Success Callback-');
+        this.sync.collection.items.on('reset', resetCallback);
         this.sync.full(this.options);
-        return expect(this.sync.collection.items.reset).toHaveBeenCalledWith(this.response);
+        return expect(resetCallback).toHaveBeenCalled();
       });
       it('should request data from server', function() {
         spyOn($, 'ajax');
@@ -54,6 +59,33 @@
         localStorage.removeItem('dreams');
         localStorage.removeItem('dreams-destroy');
         return expect(localStorage.length).toEqual(3);
+      });
+      it('should generate new id and store received data locally', function() {
+        var id, _i, _len, _ref, _results;
+        this.sync.full(this.options);
+        expect(this.dreams.pluck("sid")).toEqual(['1', '2', '3']);
+        _ref = this.dreams.pluck("id");
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          id = _ref[_i];
+          _results.push(expect(id).toMatch(/^\w{8}-\w{4}-\w{4}-\w{4}-\w{12}$/));
+        }
+        return _results;
+      });
+      it('should reload collection', function() {
+        this.dreams.add([
+          {
+            id: '725261a0-4f59-2fe2-4827-f52315414d51',
+            sid: '1',
+            name: 'Dream 1'
+          }, {
+            id: 'b27a0bcb-eb05-1296-fe63-b2a06a7c7943',
+            sid: '2',
+            name: 'Dream 2'
+          }
+        ]);
+        this.sync.full(this.options);
+        return expect(this.dreams.length).toEqual(3);
       });
       it('does not mark loaded data as dirty', function() {
         var dirties;

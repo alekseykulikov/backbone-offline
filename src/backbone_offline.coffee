@@ -62,7 +62,7 @@ class Offline.Storage
   # Add a model, giving it a unique GUID. Server id saving to "sid".
   # Set a sync's attributes updated_at, dirty and add
   create: (model, options = {}) ->
-    model.set sid: model.attributes?.sid || model.attributes?.id || 'new', id: this.guid()
+    options.regenerateId = true
     this.save(model, options)
 
   # Update a model into the set. Set a sync's attributes update_at and dirty.
@@ -71,9 +71,7 @@ class Offline.Storage
 
   # Delete a model from the storage
   destroy: (model, options = {}) ->
-    unless options.local or (sid = model.get('sid')) is 'new'
-      @destroyIds.add(sid)
-
+    @destroyIds.add(sid) unless options.local or (sid = model.get('sid')) is 'new'
     this.remove(model)
 
   find: (model) ->
@@ -92,6 +90,7 @@ class Offline.Storage
     this.s4() + this.s4() + '-' + this.s4() + '-' + this.s4() + '-' + this.s4() + '-' + this.s4() + this.s4() + this.s4()
 
   save: (item, options = {}) ->
+    item.set(sid: item.attributes?.sid || item.attributes?.id || 'new', id: this.guid()) if options.regenerateId
     item.set(updated_at: (new Date()).toJSON(), dirty: true) unless options.local
 
     this.replaceKeyFields(item, 'local')
@@ -150,8 +149,9 @@ class Offline.Sync
   full: (options = {}) ->
     Backbone.ajaxSync 'read', @collection.items, success: (response, status, xhr) =>
       @storage.clear()
-      @collection.items.create(item, local: true) for item in response
-      @collection.items.reset(response)
+      @collection.items.reset([])
+      @collection.items.create(item, local: true, regenerateId: true) for item in response
+      @collection.items.trigger('reset')
       options.success(response) if options.success
 
   # @storage.sync.incremental() - incremental storage synchronization
@@ -184,13 +184,11 @@ class Offline.Sync
       item.sid = item.id
       delete item.id
       @collection.items.create(item, local: true)
-      @collection.items.trigger('added')
 
   updateItem: (item, model) ->
     if (new Date(model.get 'updated_at')) < (new Date(item.updated_at))
       delete item.id
       model.save item, local: true
-      model.trigger('updated')
 
   # Use to send modifyed data to the server
   # You can use it manually for sending changes
