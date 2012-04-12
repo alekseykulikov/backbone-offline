@@ -143,11 +143,15 @@ class Offline.Sync
     @collection = new Offline.Collection(collection)
     @storage = storage
 
+  ajax: (method, model, options) ->
+    if navigator.onLine isnt false
+      Backbone.ajaxSync(method, model, options)
+
   # @storage.sync.full() - full storage synchronization
   # 1. clear collection and store
   # 2. load new data
   full: (options = {}) ->
-    Backbone.ajaxSync 'read', @collection.items, success: (response, status, xhr) =>
+    this.ajax 'read', @collection.items, success: (response, status, xhr) =>
       @storage.clear()
       @collection.items.reset([])
       @collection.items.create(item, local: true, regenerateId: true) for item in response
@@ -167,7 +171,7 @@ class Offline.Sync
   #
   # @storage.sync.pull()
   pull: (options = {}) ->
-    Backbone.ajaxSync 'read', @collection.items, success: (response, status, xhr) =>
+    this.ajax 'read', @collection.items, success: (response, status, xhr) =>
       @collection.destroyDiff(response)
       this.pullItem(item) for item in response
       options.success() if options.success
@@ -208,7 +212,7 @@ class Offline.Sync
     delete item.attributes.id
     [method, item.id] = if item.get('sid') is 'new' then ['create', null] else ['update', item.attributes.sid]
 
-    Backbone.ajaxSync method, item, success: (response, status, xhr) =>
+    this.ajax method, item, success: (response, status, xhr) =>
       item.set(sid: response.id) if method is 'create'
       item.save {dirty: false}, {local: true}
 
@@ -216,7 +220,7 @@ class Offline.Sync
 
   destroyBySid: (sid) ->
     model = @collection.fakeModel(sid)
-    Backbone.ajaxSync 'delete', model, success: (response, status, xhr) =>
+    this.ajax 'delete', model, success: (response, status, xhr) =>
       @storage.destroyIds.remove(sid)
 
 # Manage indexes storing to localStorage.

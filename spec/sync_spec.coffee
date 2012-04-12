@@ -4,9 +4,29 @@ describe 'Offline.Sync', ->
     @dreams = new Dreams()
     @storage = @dreams.storage
     @sync = @storage.sync
+    window.navigator = {onLine: true}
 
   afterEach ->
     localStorage.clear()
+
+  describe 'ajax', ->
+    beforeEach ->
+      @dream = new Dream()
+      spyOn(Backbone, "ajaxSync")
+
+    it 'should call Backbone.ajaxSync when onLine', ->
+      @sync.ajax("read", @dream, {})
+      expect(Backbone.ajaxSync).toHaveBeenCalledWith("read", @dream, {})
+
+    it 'should call Backbone.ajaxSync when onLine is undefined', ->
+      window.navigator = {}
+      @sync.ajax("read", @dream, {})
+      expect(Backbone.ajaxSync).toHaveBeenCalledWith("read", @dream, {})
+
+    it 'should does nothing when offline', ->
+      window.navigator = {onLine: false}
+      @sync.ajax("read", @dream, {})
+      expect(Backbone.ajaxSync.callCount).toBe(0)
 
   describe 'full', ->
     beforeEach ->
@@ -175,10 +195,10 @@ describe 'Offline.Sync', ->
       beforeEach ->
         @dream = @dreams.create()
 
-      it 'should call Backbone.ajaxSync', ->
-        spyOn(Backbone, 'ajaxSync')
+      it 'should call ajax', ->
+        spyOn(@sync, 'ajax')
         @sync.pushItem(@dream)
-        expect(Backbone.ajaxSync).toHaveBeenCalledWith('create', jasmine.any(Object), {success: jasmine.any(Function)})
+        expect(@sync.ajax).toHaveBeenCalledWith('create', jasmine.any(Object), {success: jasmine.any(Function)})
 
       it 'sets dirty to false and sets sid', ->
         registerFakeAjax url: '/api/dreams', type: 'post', successData: {id: '12'}
@@ -199,11 +219,10 @@ describe 'Offline.Sync', ->
       beforeEach ->
         @dream = @dreams.create(sid: '101')
 
-      it 'should call Backbone.ajaxSync', ->
-        spyOn(Backbone, 'ajaxSync')
+      it 'should call ajax', ->
+        spyOn(@sync, 'ajax')
         @sync.pushItem(@dream)
-
-        expect(Backbone.ajaxSync).toHaveBeenCalledWith('update', jasmine.any(Object), {success: jasmine.any(Function)})
+        expect(@sync.ajax).toHaveBeenCalledWith('update', jasmine.any(Object), {success: jasmine.any(Function)})
 
       it 'sets dirty to false', ->
         registerFakeAjax url: "/api/dreams/101", type: 'put', successData: {}
@@ -217,10 +236,10 @@ describe 'Offline.Sync', ->
     beforeEach ->
       @sid = @dreams.create(sid: '3', local: true).get('sid')
 
-    it 'should call Backbone.ajaxSync', ->
-      spyOn(Backbone, 'ajaxSync')
+    it 'should call ajax', ->
+      spyOn(@sync, 'ajax')
       @sync.destroyBySid(@sid)
-      expect(Backbone.ajaxSync).toHaveBeenCalledWith('delete', jasmine.any(Object), {success: jasmine.any(Function)})
+      expect(@sync.ajax).toHaveBeenCalledWith('delete', jasmine.any(Object), {success: jasmine.any(Function)})
 
     it 'should clear @destroyIds', ->
       registerFakeAjax url: "/api/dreams/#{@sid}", type: 'delete', successData: {}

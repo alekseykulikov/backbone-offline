@@ -179,10 +179,16 @@
       this.storage = storage;
     }
 
+    Sync.prototype.ajax = function(method, model, options) {
+      if (navigator.onLine !== false) {
+        return Backbone.ajaxSync(method, model, options);
+      }
+    };
+
     Sync.prototype.full = function(options) {
       var _this = this;
       if (options == null) options = {};
-      return Backbone.ajaxSync('read', this.collection.items, {
+      return this.ajax('read', this.collection.items, {
         success: function(response, status, xhr) {
           var item, _i, _len;
           _this.storage.clear();
@@ -212,7 +218,7 @@
     Sync.prototype.pull = function(options) {
       var _this = this;
       if (options == null) options = {};
-      return Backbone.ajaxSync('read', this.collection.items, {
+      return this.ajax('read', this.collection.items, {
         success: function(response, status, xhr) {
           var item, _i, _len;
           _this.collection.destroyDiff(response);
@@ -277,7 +283,7 @@
       localId = item.id;
       delete item.attributes.id;
       _ref = item.get('sid') === 'new' ? ['create', null] : ['update', item.attributes.sid], method = _ref[0], item.id = _ref[1];
-      Backbone.ajaxSync(method, item, {
+      this.ajax(method, item, {
         success: function(response, status, xhr) {
           if (method === 'create') {
             item.set({
@@ -299,7 +305,7 @@
       var model,
         _this = this;
       model = this.collection.fakeModel(sid);
-      return Backbone.ajaxSync('delete', model, {
+      return this.ajax('delete', model, {
         success: function(response, status, xhr) {
           return _this.storage.destroyIds.remove(sid);
         }

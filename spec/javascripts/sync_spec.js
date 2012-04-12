@@ -5,10 +5,35 @@
       localStorage.setItem('dreams', '');
       this.dreams = new Dreams();
       this.storage = this.dreams.storage;
-      return this.sync = this.storage.sync;
+      this.sync = this.storage.sync;
+      return window.navigator = {
+        onLine: true
+      };
     });
     afterEach(function() {
       return localStorage.clear();
+    });
+    describe('ajax', function() {
+      beforeEach(function() {
+        this.dream = new Dream();
+        return spyOn(Backbone, "ajaxSync");
+      });
+      it('should call Backbone.ajaxSync when onLine', function() {
+        this.sync.ajax("read", this.dream, {});
+        return expect(Backbone.ajaxSync).toHaveBeenCalledWith("read", this.dream, {});
+      });
+      it('should call Backbone.ajaxSync when onLine is undefined', function() {
+        window.navigator = {};
+        this.sync.ajax("read", this.dream, {});
+        return expect(Backbone.ajaxSync).toHaveBeenCalledWith("read", this.dream, {});
+      });
+      return it('should does nothing when offline', function() {
+        window.navigator = {
+          onLine: false
+        };
+        this.sync.ajax("read", this.dream, {});
+        return expect(Backbone.ajaxSync.callCount).toBe(0);
+      });
     });
     describe('full', function() {
       beforeEach(function() {
@@ -294,10 +319,10 @@
         beforeEach(function() {
           return this.dream = this.dreams.create();
         });
-        it('should call Backbone.ajaxSync', function() {
-          spyOn(Backbone, 'ajaxSync');
+        it('should call ajax', function() {
+          spyOn(this.sync, 'ajax');
           this.sync.pushItem(this.dream);
-          return expect(Backbone.ajaxSync).toHaveBeenCalledWith('create', jasmine.any(Object), {
+          return expect(this.sync.ajax).toHaveBeenCalledWith('create', jasmine.any(Object), {
             success: jasmine.any(Function)
           });
         });
@@ -329,10 +354,10 @@
             sid: '101'
           });
         });
-        it('should call Backbone.ajaxSync', function() {
-          spyOn(Backbone, 'ajaxSync');
+        it('should call ajax', function() {
+          spyOn(this.sync, 'ajax');
           this.sync.pushItem(this.dream);
-          return expect(Backbone.ajaxSync).toHaveBeenCalledWith('update', jasmine.any(Object), {
+          return expect(this.sync.ajax).toHaveBeenCalledWith('update', jasmine.any(Object), {
             success: jasmine.any(Function)
           });
         });
@@ -357,10 +382,10 @@
           local: true
         }).get('sid');
       });
-      it('should call Backbone.ajaxSync', function() {
-        spyOn(Backbone, 'ajaxSync');
+      it('should call ajax', function() {
+        spyOn(this.sync, 'ajax');
         this.sync.destroyBySid(this.sid);
-        return expect(Backbone.ajaxSync).toHaveBeenCalledWith('delete', jasmine.any(Object), {
+        return expect(this.sync.ajax).toHaveBeenCalledWith('delete', jasmine.any(Object), {
           success: jasmine.any(Function)
         });
       });
