@@ -126,13 +126,34 @@ describe 'Offline.Storage', ->
       @storage.save(@dream)
       expect(@storage.replaceKeyFields).toHaveBeenCalledWith(@dream, 'local')
 
+    it "should push item if options.autoPush", ->
+      @storage.autoPush = true
+      spyOn(@storage.sync, 'pushItem')
+      @storage.create(@dream)
+      expect(@storage.sync.pushItem).toHaveBeenCalledWith(@dream)
+
+    it "should does not push item if local=true", ->
+      @storage.autoPush = true
+      spyOn(@storage.sync, 'pushItem')
+      @storage.create(@dream, local: true)
+      expect(@storage.sync.pushItem.callCount).toBe(0)
+
   describe 'remove', ->
     beforeEach ->
-      @dream = @dreams.create(id: 'dcba')
-      @storage.remove(@dream)
+      @dream = @dreams.create({id: 'dcba'}, {regenerateId: true})
 
-    it 'should remove item from localStorage', -> expect(localStorage.getItem 'dreams-dcba').toBeNull()
-    it 'should remove item.id from @allIds', -> expect(_.include @storage.values, 'dcba').toBeFalsy()
+    it 'should remove item from localStorage', ->
+      @storage.remove(@dream)
+      expect(localStorage.getItem 'dreams-dcba').toBeNull()
+    it 'should remove item.id from @allIds', ->
+      @storage.remove(@dream)
+      expect(_.include @storage.values, 'dcba').toBeFalsy()
+
+    it "should flush item if options.autoPush", ->
+      @storage.autoPush = true
+      spyOn(@storage.sync, 'flushItem')
+      @storage.remove(@dream)
+      expect(@storage.sync.flushItem).toHaveBeenCalledWith('dcba')
 
   describe 'isEmpty', ->
     it "should return true when localStorage's key is null", ->

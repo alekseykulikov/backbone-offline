@@ -58,6 +58,7 @@ class Offline.Storage
     @destroyIds = new Offline.Index("#{@name}-destroy")
     @sync = new Offline.Sync(collection, this)
     @keys = options.keys || {}
+    @autoPush = options.autoPush || false
 
   # Add a model, giving it a unique GUID. Server id saving to "sid".
   # Set a sync's attributes updated_at, dirty and add
@@ -97,11 +98,15 @@ class Offline.Storage
     localStorage.setItem "#{@name}-#{item.id}", JSON.stringify(item)
     @allIds.add(item.id)
 
+    @sync.pushItem(item) if @autoPush and !options.local
     return item
 
   remove: (item) ->
     localStorage.removeItem "#{@name}-#{item.id}"
     @allIds.remove(item.id)
+
+    sid = item.get('sid')
+    @sync.flushItem(sid) if @autoPush and sid isnt 'new'
 
     return item
 
@@ -204,7 +209,7 @@ class Offline.Sync
   # after that it sends deleted objects to the server
   push: ->
     this.pushItem(item) for item in @collection.dirty()
-    this.destroyBySid(sid) for sid in @storage.destroyIds.values
+    this.flushItem(sid) for sid in @storage.destroyIds.values
 
   pushItem: (item) ->
     @storage.replaceKeyFields(item, 'server')
@@ -218,7 +223,7 @@ class Offline.Sync
 
     item.attributes.id = localId; item.id = localId
 
-  destroyBySid: (sid) ->
+  flushItem: (sid) ->
     model = @collection.fakeModel(sid)
     this.ajax 'delete', model, success: (response, status, xhr) =>
       @storage.destroyIds.remove(sid)

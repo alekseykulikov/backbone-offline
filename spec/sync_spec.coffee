@@ -182,13 +182,13 @@ describe 'Offline.Sync', ->
       @sync.push()
       expect(@sync.pushItem.callCount).toBe(2)
 
-    it 'should call "destroyBySid" for destroyed items', ->
+    it 'should call "flushItem" for destroyed items', ->
       destroyedDream = @dreams.create({id: '3', name: 'Learning to play on sax', sid: '3'}, {local: true})
       destroyedDream.destroy()
-      spyOn(@sync, 'destroyBySid')
+      spyOn(@sync, 'flushItem')
 
       @sync.push()
-      expect(@sync.destroyBySid.callCount).toBe(1)
+      expect(@sync.flushItem.callCount).toBe(1)
 
   describe 'pushItem', ->
     describe 'when item is new', ->
@@ -232,16 +232,16 @@ describe 'Offline.Sync', ->
         expect(@dream.get 'dirty').toBeFalsy()
         expect(@dream.id).toEqual(localId)
 
-  describe 'destroyBySid', ->
+  describe 'flushItem', ->
     beforeEach ->
       @sid = @dreams.create(sid: '3', local: true).get('sid')
 
     it 'should call ajax', ->
       spyOn(@sync, 'ajax')
-      @sync.destroyBySid(@sid)
+      @sync.flushItem(@sid)
       expect(@sync.ajax).toHaveBeenCalledWith('delete', jasmine.any(Object), {success: jasmine.any(Function)})
 
     it 'should clear @destroyIds', ->
       registerFakeAjax url: "/api/dreams/#{@sid}", type: 'delete', successData: {}
-      @sync.destroyBySid(@sid)
+      @sync.flushItem(@sid)
       expect(@storage.destroyIds.values).toEqual([])

@@ -161,24 +161,47 @@
         this.storage.save(this.dream);
         return expect(_.include(this.storage.allIds.values, 'abcd')).toBeTruthy();
       });
-      return it('should call "replaceKeyFields"', function() {
+      it('should call "replaceKeyFields"', function() {
         spyOn(this.storage, 'replaceKeyFields');
         this.storage.save(this.dream);
         return expect(this.storage.replaceKeyFields).toHaveBeenCalledWith(this.dream, 'local');
       });
+      it("should push item if options.autoPush", function() {
+        this.storage.autoPush = true;
+        spyOn(this.storage.sync, 'pushItem');
+        this.storage.create(this.dream);
+        return expect(this.storage.sync.pushItem).toHaveBeenCalledWith(this.dream);
+      });
+      return it("should does not push item if local=true", function() {
+        this.storage.autoPush = true;
+        spyOn(this.storage.sync, 'pushItem');
+        this.storage.create(this.dream, {
+          local: true
+        });
+        return expect(this.storage.sync.pushItem.callCount).toBe(0);
+      });
     });
     describe('remove', function() {
       beforeEach(function() {
-        this.dream = this.dreams.create({
+        return this.dream = this.dreams.create({
           id: 'dcba'
+        }, {
+          regenerateId: true
         });
-        return this.storage.remove(this.dream);
       });
       it('should remove item from localStorage', function() {
+        this.storage.remove(this.dream);
         return expect(localStorage.getItem('dreams-dcba')).toBeNull();
       });
-      return it('should remove item.id from @allIds', function() {
+      it('should remove item.id from @allIds', function() {
+        this.storage.remove(this.dream);
         return expect(_.include(this.storage.values, 'dcba')).toBeFalsy();
+      });
+      return it("should flush item if options.autoPush", function() {
+        this.storage.autoPush = true;
+        spyOn(this.storage.sync, 'flushItem');
+        this.storage.remove(this.dream);
+        return expect(this.storage.sync.flushItem).toHaveBeenCalledWith('dcba');
       });
     });
     describe('isEmpty', function() {

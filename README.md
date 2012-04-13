@@ -54,6 +54,12 @@ It uses field `sid` in order to save server’s id. This field is used when requ
 
 Optional parameter `keys` is used when your collection has a relation with other collections. In this example local `tag_id` will be changed to necessary primary key from `@tags` when sending data to the server.
 
+Option `autoPush` allows to send request to the server on every save. It simply works like cache for your data.
+
+````
+@storage = new Offline.Storage('dreams', this, autoPush: true)
+````
+
 ### Offline.Sync
 
 This is an algorithm for syncing local storage with a server. For inspiration was used [Evernote EDAM](http://dev.evernote.com/media/pdf/edam-sync.pdf) algorithm, but later it has been changed significantly.

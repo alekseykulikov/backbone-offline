@@ -299,7 +299,7 @@
         this.sync.push();
         return expect(this.sync.pushItem.callCount).toBe(2);
       });
-      return it('should call "destroyBySid" for destroyed items', function() {
+      return it('should call "flushItem" for destroyed items', function() {
         var destroyedDream;
         destroyedDream = this.dreams.create({
           id: '3',
@@ -309,9 +309,9 @@
           local: true
         });
         destroyedDream.destroy();
-        spyOn(this.sync, 'destroyBySid');
+        spyOn(this.sync, 'flushItem');
         this.sync.push();
-        return expect(this.sync.destroyBySid.callCount).toBe(1);
+        return expect(this.sync.flushItem.callCount).toBe(1);
       });
     });
     describe('pushItem', function() {
@@ -375,7 +375,7 @@
         });
       });
     });
-    return describe('destroyBySid', function() {
+    return describe('flushItem', function() {
       beforeEach(function() {
         return this.sid = this.dreams.create({
           sid: '3',
@@ -384,7 +384,7 @@
       });
       it('should call ajax', function() {
         spyOn(this.sync, 'ajax');
-        this.sync.destroyBySid(this.sid);
+        this.sync.flushItem(this.sid);
         return expect(this.sync.ajax).toHaveBeenCalledWith('delete', jasmine.any(Object), {
           success: jasmine.any(Function)
         });
@@ -395,7 +395,7 @@
           type: 'delete',
           successData: {}
         });
-        this.sync.destroyBySid(this.sid);
+        this.sync.flushItem(this.sid);
         return expect(this.storage.destroyIds.values).toEqual([]);
       });
     });

@@ -51,6 +51,7 @@
       this.destroyIds = new Offline.Index("" + this.name + "-destroy");
       this.sync = new Offline.Sync(collection, this);
       this.keys = options.keys || {};
+      this.autoPush = options.autoPush || false;
     }
 
     Storage.prototype.create = function(model, options) {
@@ -119,12 +120,16 @@
       this.replaceKeyFields(item, 'local');
       localStorage.setItem("" + this.name + "-" + item.id, JSON.stringify(item));
       this.allIds.add(item.id);
+      if (this.autoPush && !options.local) this.sync.pushItem(item);
       return item;
     };
 
     Storage.prototype.remove = function(item) {
+      var sid;
       localStorage.removeItem("" + this.name + "-" + item.id);
       this.allIds.remove(item.id);
+      sid = item.get('sid');
+      if (this.autoPush && sid !== 'new') this.sync.flushItem(sid);
       return item;
     };
 
@@ -271,7 +276,7 @@
       _results = [];
       for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
         sid = _ref2[_j];
-        _results.push(this.destroyBySid(sid));
+        _results.push(this.flushItem(sid));
       }
       return _results;
     };
@@ -301,7 +306,7 @@
       return item.id = localId;
     };
 
-    Sync.prototype.destroyBySid = function(sid) {
+    Sync.prototype.flushItem = function(sid) {
       var model,
         _this = this;
       model = this.collection.fakeModel(sid);
