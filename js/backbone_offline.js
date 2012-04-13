@@ -1,7 +1,7 @@
 (function() {
 
   window.Offline = {
-    VERSION: '0.1.1',
+    VERSION: '0.2.0',
     localSync: function(method, model, options, store) {
       var resp;
       resp = (function() {
@@ -35,6 +35,9 @@
       } else {
         return Backbone.ajaxSync(method, model, options);
       }
+    },
+    onLine: function() {
+      return navigator.onLine !== false;
     }
   };
 
@@ -160,14 +163,16 @@
 
     Storage.prototype.replaceKeyFields = function(item, method) {
       var collection, field, newValue, replacedField, wrapper, _ref, _ref2, _ref3;
-      if (item.attributes) item = item.attributes;
-      _ref = this.keys;
-      for (field in _ref) {
-        collection = _ref[field];
-        replacedField = item[field];
-        if (!/^\w{8}-\w{4}-\w{4}/.test(replacedField) || method !== 'local') {
-          newValue = method === 'local' ? (wrapper = new Offline.Collection(collection), (_ref2 = wrapper.get(replacedField)) != null ? _ref2.id : void 0) : (_ref3 = collection.get(replacedField)) != null ? _ref3.get('sid') : void 0;
-          if (!_.isUndefined(newValue)) item[field] = newValue;
+      if (Offline.onLine()) {
+        if (item.attributes) item = item.attributes;
+        _ref = this.keys;
+        for (field in _ref) {
+          collection = _ref[field];
+          replacedField = item[field];
+          if (!/^\w{8}-\w{4}-\w{4}/.test(replacedField) || method !== 'local') {
+            newValue = method === 'local' ? (wrapper = new Offline.Collection(collection), (_ref2 = wrapper.get(replacedField)) != null ? _ref2.id : void 0) : (_ref3 = collection.get(replacedField)) != null ? _ref3.get('sid') : void 0;
+            if (!_.isUndefined(newValue)) item[field] = newValue;
+          }
         }
       }
       return item;
@@ -185,7 +190,7 @@
     }
 
     Sync.prototype.ajax = function(method, model, options) {
-      if (navigator.onLine !== false) {
+      if (Offline.onLine() !== false) {
         return Backbone.ajaxSync(method, model, options);
       }
     };

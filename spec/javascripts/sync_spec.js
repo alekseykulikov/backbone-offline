@@ -6,9 +6,7 @@
       this.dreams = new Dreams();
       this.storage = this.dreams.storage;
       this.sync = this.storage.sync;
-      return window.navigator = {
-        onLine: true
-      };
+      return spyOn(Offline, "onLine").andReturn(true);
     });
     afterEach(function() {
       return localStorage.clear();
@@ -23,14 +21,12 @@
         return expect(Backbone.ajaxSync).toHaveBeenCalledWith("read", this.dream, {});
       });
       it('should call Backbone.ajaxSync when onLine is undefined', function() {
-        window.navigator = {};
+        Offline.onLine.andReturn(void 0);
         this.sync.ajax("read", this.dream, {});
         return expect(Backbone.ajaxSync).toHaveBeenCalledWith("read", this.dream, {});
       });
       return it('should does nothing when offline', function() {
-        window.navigator = {
-          onLine: false
-        };
+        Offline.onLine.andReturn(false);
         this.sync.ajax("read", this.dream, {});
         return expect(Backbone.ajaxSync.callCount).toBe(0);
       });

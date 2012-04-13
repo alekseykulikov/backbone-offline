@@ -4,7 +4,7 @@ describe 'Offline.Sync', ->
     @dreams = new Dreams()
     @storage = @dreams.storage
     @sync = @storage.sync
-    window.navigator = {onLine: true}
+    spyOn(Offline, "onLine").andReturn(true)
 
   afterEach ->
     localStorage.clear()
@@ -19,12 +19,12 @@ describe 'Offline.Sync', ->
       expect(Backbone.ajaxSync).toHaveBeenCalledWith("read", @dream, {})
 
     it 'should call Backbone.ajaxSync when onLine is undefined', ->
-      window.navigator = {}
+      Offline.onLine.andReturn(undefined)
       @sync.ajax("read", @dream, {})
       expect(Backbone.ajaxSync).toHaveBeenCalledWith("read", @dream, {})
 
     it 'should does nothing when offline', ->
-      window.navigator = {onLine: false}
+      Offline.onLine.andReturn(false)
       @sync.ajax("read", @dream, {})
       expect(Backbone.ajaxSync.callCount).toBe(0)
 

@@ -5,7 +5,7 @@
 #    May be freely distributed according to MIT license.
 
 window.Offline =
-  VERSION: '0.1.1'
+  VERSION: '0.2.0'
 
   # This is a method for CRUD operations with localStorage.
   # Delegates to 'Offline.Storage' and works as ‘Backbone.sync’ alternative
@@ -27,6 +27,9 @@ window.Offline =
       Offline.localSync(method, model, options, store)
     else
       Backbone.ajaxSync(method, model, options)
+
+  onLine: ->
+    navigator.onLine isnt false
 
 # Override 'Backbone.sync' to default to 'Offline.sync'
 # the original 'Backbone.sync' is available in 'Backbone.ajaxSync'
@@ -123,18 +126,19 @@ class Offline.Storage
 
   # Replaces local-keys to server-keys based on options.keys.
   replaceKeyFields: (item, method) ->
-    item = item.attributes if item.attributes
+    if Offline.onLine()
+      item = item.attributes if item.attributes
 
-    for field, collection of @keys
-      replacedField = item[field]
+      for field, collection of @keys
+        replacedField = item[field]
 
-      if !/^\w{8}-\w{4}-\w{4}/.test(replacedField) or method isnt 'local'
-        newValue = if method is 'local'
-          wrapper = new Offline.Collection(collection)
-          wrapper.get(replacedField)?.id
-        else
-          collection.get(replacedField)?.get('sid')
-        item[field] = newValue unless _.isUndefined(newValue)
+        if !/^\w{8}-\w{4}-\w{4}/.test(replacedField) or method isnt 'local'
+          newValue = if method is 'local'
+            wrapper = new Offline.Collection(collection)
+            wrapper.get(replacedField)?.id
+          else
+            collection.get(replacedField)?.get('sid')
+          item[field] = newValue unless _.isUndefined(newValue)
     return item
 
 # Sync collection with a server. All server requests delegated to 'Backbone.sync'
@@ -149,7 +153,7 @@ class Offline.Sync
     @storage = storage
 
   ajax: (method, model, options) ->
-    if navigator.onLine isnt false
+    if Offline.onLine() isnt false
       Backbone.ajaxSync(method, model, options)
 
   # @storage.sync.full() - full storage synchronization
