@@ -15,12 +15,12 @@ describe 'Offline', ->
     it 'should call "findAll" when reading collection', ->
       spyOn(@storage, 'findAll')
       @dreams.fetch()
-      expect(@storage.findAll).toHaveBeenCalledWith()
+      expect(@storage.findAll).toHaveBeenCalledWith(jasmine.any(Object))
 
     it 'should call "find" when reading model', ->
       spyOn(@storage, 'find')
       @dream.fetch()
-      expect(@storage.find).toHaveBeenCalledWith(@dream)
+      expect(@storage.find).toHaveBeenCalledWith(@dream, jasmine.any(Object))
 
     it 'should call "create" when creating model', ->
       spyOn(@storage, 'create')

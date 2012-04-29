@@ -12,7 +12,7 @@ window.Offline =
   localSync: (method, model, options, store) ->
     resp = switch(method)
       when 'read'
-        if _.isUndefined(model.id) then store.findAll() else store.find(model)
+        if _.isUndefined(model.id) then store.findAll(options) else store.find(model, options)
       when 'create' then store.create(model, options)
       when 'update' then store.update(model, options)
       when 'delete' then store.destroy(model, options)
@@ -78,13 +78,14 @@ class Offline.Storage
     @destroyIds.add(sid) unless options.local or (sid = model.get('sid')) is 'new'
     this.remove(model)
 
-  find: (model) ->
+  find: (model, options = {}) ->
     JSON.parse localStorage.getItem("#{@name}-#{model.id}")
 
   # Returns the array of all models currently in the storage.
   # And refreshes the storage into background
-  findAll: ->
-    if this.isEmpty() then @sync.full() else @sync.incremental()
+  findAll: (options = {}) ->
+    unless options.local
+      if this.isEmpty() then @sync.full() else @sync.incremental()
     JSON.parse(localStorage.getItem("#{@name}-#{id}")) for id in @allIds.values
 
   s4: ->

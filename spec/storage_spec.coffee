@@ -109,6 +109,11 @@ describe 'Offline.Storage', ->
       @storage.findAll()
       expect(@storage.sync.full).toHaveBeenCalled()
 
+    it 'should not call "full" or "incremental" if added option {local: true}', ->
+      @dreams.fetch(local: true)
+      expect(@storage.sync.full.callCount).toBe(0)
+      expect(@storage.sync.incremental.callCount).toBe(0)
+
   describe 'save', ->
     beforeEach ->
       @dream = new Dream(id: 'abcd', name: 'New dream')

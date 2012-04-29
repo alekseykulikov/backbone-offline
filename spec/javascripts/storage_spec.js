@@ -140,10 +140,17 @@
         this.storage.findAll();
         return expect(this.storage.sync.incremental).toHaveBeenCalled();
       });
-      return it('should call "full" sync when storage is empty', function() {
+      it('should call "full" sync when storage is empty', function() {
         localStorage.clear();
         this.storage.findAll();
         return expect(this.storage.sync.full).toHaveBeenCalled();
+      });
+      return it('should not call "full" or "incremental" if added option {local: true}', function() {
+        this.dreams.fetch({
+          local: true
+        });
+        expect(this.storage.sync.full.callCount).toBe(0);
+        return expect(this.storage.sync.incremental.callCount).toBe(0);
       });
     });
     describe('save', function() {

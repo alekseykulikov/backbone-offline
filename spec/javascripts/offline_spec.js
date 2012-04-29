@@ -20,12 +20,12 @@
       it('should call "findAll" when reading collection', function() {
         spyOn(this.storage, 'findAll');
         this.dreams.fetch();
-        return expect(this.storage.findAll).toHaveBeenCalledWith();
+        return expect(this.storage.findAll).toHaveBeenCalledWith(jasmine.any(Object));
       });
       it('should call "find" when reading model', function() {
         spyOn(this.storage, 'find');
         this.dream.fetch();
-        return expect(this.storage.find).toHaveBeenCalledWith(this.dream);
+        return expect(this.storage.find).toHaveBeenCalledWith(this.dream, jasmine.any(Object));
       });
       it('should call "create" when creating model', function() {
         spyOn(this.storage, 'create');
