@@ -39,11 +39,17 @@ describe 'Offline.Sync', ->
       @sync.full(@options)
       expect(@storage.clear).toHaveBeenCalled()
 
-    it 'should reset collection', ->
-      resetCallback = jasmine.createSpy('-Success Callback-')
+    it 'should reset collection once', ->
+      resetCallback = jasmine.createSpy('-Reset Callback-')
       @sync.collection.items.on('reset', resetCallback)
       @sync.full(@options)
-      expect(resetCallback).toHaveBeenCalled()
+      expect(resetCallback.callCount).toBe(1)
+
+    it 'should not trigger "add" callbacks', ->
+      addCallback = jasmine.createSpy('-Add Callback-')
+      @sync.collection.items.on('add', addCallback)
+      @sync.full(@options)
+      expect(addCallback.callCount).toBe(0)
 
     it 'should request data from server', ->
       spyOn($, 'ajax')

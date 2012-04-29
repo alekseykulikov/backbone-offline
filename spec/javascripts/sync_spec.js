@@ -58,12 +58,19 @@
         this.sync.full(this.options);
         return expect(this.storage.clear).toHaveBeenCalled();
       });
-      it('should reset collection', function() {
+      it('should reset collection once', function() {
         var resetCallback;
-        resetCallback = jasmine.createSpy('-Success Callback-');
+        resetCallback = jasmine.createSpy('-Reset Callback-');
         this.sync.collection.items.on('reset', resetCallback);
         this.sync.full(this.options);
-        return expect(resetCallback).toHaveBeenCalled();
+        return expect(resetCallback.callCount).toBe(1);
+      });
+      it('should not trigger "add" callbacks', function() {
+        var addCallback;
+        addCallback = jasmine.createSpy('-Add Callback-');
+        this.sync.collection.items.on('add', addCallback);
+        this.sync.full(this.options);
+        return expect(addCallback.callCount).toBe(0);
       });
       it('should request data from server', function() {
         spyOn($, 'ajax');

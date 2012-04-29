@@ -162,8 +162,8 @@ class Offline.Sync
   full: (options = {}) ->
     this.ajax 'read', @collection.items, success: (response, status, xhr) =>
       @storage.clear()
-      @collection.items.reset([])
-      @collection.items.create(item, local: true, regenerateId: true) for item in response
+      @collection.items.reset([], silent: true)
+      @collection.items.create(item, silent: true, local: true, regenerateId: true) for item in response
       @collection.items.trigger('reset')
       options.success(response) if options.success
 
