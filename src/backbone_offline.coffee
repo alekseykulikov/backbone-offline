@@ -79,7 +79,7 @@ class Offline.Storage
       if e.name is 'QUOTA_EXCEEDED_ERR'
         this.trigger('quota_exceed')
       else
-        @support = true
+        @support = false
 
   removeItem: (key) ->
     localStorage.removeItem(key)

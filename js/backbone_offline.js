@@ -75,7 +75,7 @@
         if (e.name === 'QUOTA_EXCEEDED_ERR') {
           return this.trigger('quota_exceed');
         } else {
-          return this.support = true;
+          return this.support = false;
         }
       }
     };
