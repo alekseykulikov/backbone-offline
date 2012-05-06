@@ -64,6 +64,15 @@ class Offline.Storage
     @keys = options.keys || {}
     @autoPush = options.autoPush || false
 
+  # Test from modernizr: https://github.com/Modernizr/Modernizr/blob/master/modernizr.js
+  # Normally, we could not test that directly and need to do a
+  #   `('localStorage' in window) && ` test first because otherwise Firefox will
+  #   throw bugzil.la/365772 if cookies are disabled
+  #
+  # Also in iOS5 Private Browsing mode, attempting to use localStorage.setItem
+  # will throw the exception:
+  #   QUOTA_EXCEEDED_ERRROR DOM Exception 22.
+  # Peculiarly, getItem and removeItem calls do not throw.
   isLocalStorageSupport: ->
     try
       localStorage.setItem('isLocalStorageSupport', '1')
@@ -72,6 +81,9 @@ class Offline.Storage
     catch e
       false
 
+  # Most implementations of HTML5 localStorage have a size limit of about 5MB.
+  # When data starts exceeding this limit, setting a key value throws the QUOTA_EXCEEDED_ERROR.
+  # in other cases localSync support will be stopped
   setItem: (key, value) ->
     try
       localStorage.setItem key, value
@@ -81,6 +93,7 @@ class Offline.Storage
       else
         @support = false
 
+  # Wrappers for localStorage methods
   removeItem: (key) ->
     localStorage.removeItem(key)
 
@@ -179,10 +192,8 @@ class Offline.Sync
 
   ajax: (method, model, options) ->
     if Offline.onLine()
+      this.prepareOptions(options)
       Backbone.ajaxSync(method, model, options)
-      if @storage.getItem('offline')
-        @storage.removeItem('offline')
-        this.incremental()
     else
       @storage.setItem('offline', 'true')
 
@@ -202,6 +213,16 @@ class Offline.Sync
   # 2. push() - send modified data to server
   incremental: ->
     this.pull success: => this.push()
+
+  # Runs incremental sync when storage was offline
+  # after current request therefore don't duplicate requests
+  prepareOptions: (options) ->
+    if @storage.getItem('offline')
+      @storage.removeItem('offline')
+      success = options.success
+      options.success = (response, status, xhr) =>
+        success(response, status, xhr)
+        this.incremental()
 
   # Requests data from the server and merges it with a collection.
   # It's useful when you want to refresh your collection and don't want to reload it completely.

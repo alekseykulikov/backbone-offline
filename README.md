@@ -84,6 +84,13 @@ dreams.save(name: 'Diving with scuba') # local save
 dreams.sync.push() # POST /api/dreams and PUT /api/dreams/:id
 ````
 
+### How to contribute
+
+* Clone repository from github: `git clone git://github.com/documentcloud/backbone.git` and switch to new branch `git checkout -b new-feature`
+* Run `cake watch` for auto compilation files of CoffeeScript
+* Make sure that specs are green `open /spec/spec_runner.html` and start development
+* You can suggest a feature or report a bug on [github](https://github.com/Ask11/backbone.offline/issues) 
+
 ### Examples
 
 [Saveidea](http://saveideanow.com/demo_app) is a web-app for storing ideas, that appear in your mind during the day. It uses this library to work offline in the browser.
@@ -101,3 +108,4 @@ To Jerome Gravel-Niquet for [backbone.localStorage](https://github.com/jeromegn/
 ### License
 
 Licensed under MIT license. © 2012 Aleksey Kulikov, All Rights Reserved
+[Full license text](https://github.com/Ask11/backbone.offline/blob/master/LICENSE)
