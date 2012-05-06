@@ -154,7 +154,7 @@ class Offline.Sync
     @storage = storage
 
   ajax: (method, model, options) ->
-    if Offline.onLine() isnt false
+    if Offline.onLine()
       Backbone.ajaxSync(method, model, options)
 
   # @storage.sync.full() - full storage synchronization

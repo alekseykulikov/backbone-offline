@@ -194,9 +194,7 @@
     }
 
     Sync.prototype.ajax = function(method, model, options) {
-      if (Offline.onLine() !== false) {
-        return Backbone.ajaxSync(method, model, options);
-      }
+      if (Offline.onLine()) return Backbone.ajaxSync(method, model, options);
     };
 
     Sync.prototype.full = function(options) {

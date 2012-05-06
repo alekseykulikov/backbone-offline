@@ -16,12 +16,7 @@
         this.dream = new Dream();
         return spyOn(Backbone, "ajaxSync");
       });
-      it('should call Backbone.ajaxSync when onLine', function() {
-        this.sync.ajax("read", this.dream, {});
-        return expect(Backbone.ajaxSync).toHaveBeenCalledWith("read", this.dream, {});
-      });
-      it('should call Backbone.ajaxSync when onLine is undefined', function() {
-        Offline.onLine.andReturn(void 0);
+      it('should calls Backbone.ajaxSync when onLine', function() {
         this.sync.ajax("read", this.dream, {});
         return expect(Backbone.ajaxSync).toHaveBeenCalledWith("read", this.dream, {});
       });

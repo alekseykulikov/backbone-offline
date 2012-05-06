@@ -3,6 +3,7 @@ describe 'Offline.Storage', ->
     localStorage.setItem('dreams', '')
     @dreams = new Dreams()
     @storage = @dreams.storage
+    spyOn(Offline, "onLine").andReturn(true)
 
   afterEach ->
     localStorage.clear()

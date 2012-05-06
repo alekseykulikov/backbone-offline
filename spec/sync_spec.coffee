@@ -14,12 +14,7 @@ describe 'Offline.Sync', ->
       @dream = new Dream()
       spyOn(Backbone, "ajaxSync")
 
-    it 'should call Backbone.ajaxSync when onLine', ->
-      @sync.ajax("read", @dream, {})
-      expect(Backbone.ajaxSync).toHaveBeenCalledWith("read", @dream, {})
-
-    it 'should call Backbone.ajaxSync when onLine is undefined', ->
-      Offline.onLine.andReturn(undefined)
+    it 'should calls Backbone.ajaxSync when onLine', ->
       @sync.ajax("read", @dream, {})
       expect(Backbone.ajaxSync).toHaveBeenCalledWith("read", @dream, {})
 

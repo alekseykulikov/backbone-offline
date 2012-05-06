@@ -6,6 +6,19 @@ describe 'Offline', ->
   afterEach ->
     window.localStorage.clear()
 
+  describe 'onLine', ->
+    it 'should returns true when onLine is undefined', ->
+      window.navigator = {}
+      expect(Offline.onLine()).toBeTruthy()
+
+    it 'should returns true when onLine is true', ->
+      window.navigator = {onLine: true}
+      expect(Offline.onLine()).toBeTruthy()
+
+    it 'should returns false when onLine is false', ->
+      window.navigator = {onLine: false}
+      expect(Offline.onLine()).toBeFalsy()
+
   describe 'localSync', ->
     beforeEach ->
       @storage = @dreams.storage

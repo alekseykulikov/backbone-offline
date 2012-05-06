@@ -4,7 +4,8 @@
     beforeEach(function() {
       localStorage.setItem('dreams', '');
       this.dreams = new Dreams();
-      return this.storage = this.dreams.storage;
+      this.storage = this.dreams.storage;
+      return spyOn(Offline, "onLine").andReturn(true);
     });
     afterEach(function() {
       return localStorage.clear();

@@ -8,6 +8,24 @@
     afterEach(function() {
       return window.localStorage.clear();
     });
+    describe('onLine', function() {
+      it('should returns true when onLine is undefined', function() {
+        window.navigator = {};
+        return expect(Offline.onLine()).toBeTruthy();
+      });
+      it('should returns true when onLine is true', function() {
+        window.navigator = {
+          onLine: true
+        };
+        return expect(Offline.onLine()).toBeTruthy();
+      });
+      return it('should returns false when onLine is false', function() {
+        window.navigator = {
+          onLine: false
+        };
+        return expect(Offline.onLine()).toBeFalsy();
+      });
+    });
     describe('localSync', function() {
       beforeEach(function() {
         this.storage = this.dreams.storage;
