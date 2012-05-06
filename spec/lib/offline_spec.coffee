@@ -62,15 +62,22 @@ describe 'Offline', ->
       expect(errorCallback).toHaveBeenCalled()
 
   describe 'sync', ->
-    it 'should delegate actions to Offline.localSync when @storage exists', ->
+    beforeEach ->
       spyOn(Offline, 'localSync')
-      @dreams.fetch()
-
-      expect(Offline.localSync).toHaveBeenCalled()
-
-    it 'should delegate actions to Backbone.ajaxSync when @storage empty', ->
-      @dreams.storage = null
       spyOn(Backbone, 'ajaxSync')
-      @dreams.fetch()
 
-      expect(Backbone.ajaxSync).toHaveBeenCalled()
+    describe 'when @storage exists', ->
+      it 'should delegates actions to Offline.localSync if @support equal true', ->
+        @dreams.fetch()
+        expect(Offline.localSync).toHaveBeenCalled()
+
+      it 'should delegates actions to Backbone.ajaxSync if @support equal false', ->
+        @dreams.storage.support = false
+        @dreams.fetch()
+        expect(Backbone.ajaxSync).toHaveBeenCalled()
+
+    describe 'when @storage empty', ->
+      it 'should delegate actions to Backbone.ajaxSync', ->
+        @dreams.storage = null
+        @dreams.fetch()
+        expect(Backbone.ajaxSync).toHaveBeenCalled()

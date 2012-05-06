@@ -18,6 +18,33 @@ describe 'Offline.Storage', ->
     it 'sets @destroyIds', -> expect(@itemsStore.destroyIds.values).toEqual(['1', '4'])
     it 'sets @keys by options.keys', -> expect(@itemsStore.keys).toEqual(parent_id: @dreams)
 
+  describe 'isLocalStorageSupport', ->
+    it 'should returns false when raised error', ->
+      spyOn(localStorage, 'setItem').andThrow('QUOTA_EXCEEDED_ERR')
+      expect(@storage.isLocalStorageSupport()).toBeFalsy()
+
+    it 'should returns true for modern browsers which support localStorage', ->
+      expect(@storage.isLocalStorageSupport()).toBeTruthy()
+
+  describe 'setItem', ->
+    it 'should sets item to localStorage', ->
+      @storage.setItem('key', 'value')
+      expect(@storage.getItem 'key').toEqual('value')
+
+    describe 'when localStorage has errors', ->
+      it "should calls 'quota_exceed' when item exceeding browser quota", ->
+        quotaCallback = jasmine.createSpy('-Quota Exceeded Error-')
+        spyOn(localStorage, 'setItem').andThrow(name: 'QUOTA_EXCEEDED_ERR')
+
+        @storage.collection.on('quota_exceed', quotaCallback)
+        @storage.setItem('key', 'value')
+        expect(quotaCallback.callCount).toBe(1)
+
+      it 'should sets @support to false in other cases', ->
+        spyOn(localStorage, 'setItem').andThrow('UNKNOWN_ERR')
+        @storage.setItem('key', 'value')
+        expect(@storage.support).toBeFalsy()
+
   describe 'create', ->
     beforeEach ->
       @dream = new Dream(name: 'Diving with scuba')

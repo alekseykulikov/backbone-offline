@@ -23,7 +23,7 @@ window.Offline =
   # and then delegates to 'Offline.localSync' when property exists else calls the default 'Backbone.sync' with received params.
   sync: (method, model, options) ->
     store = model.storage || model.collection?.storage
-    if store
+    if store and store?.support
       Offline.localSync(method, model, options, store)
     else
       Backbone.ajaxSync(method, model, options)
@@ -56,11 +56,11 @@ Backbone.sync = Offline.sync
 class Offline.Storage
 
   # Name of storage and collection link are required params
-  constructor: (@name, collection, options = {}) ->
+  constructor: (@name, @collection, options = {}) ->
     @support = this.isLocalStorageSupport()
     @allIds = new Offline.Index(@name, this)
     @destroyIds = new Offline.Index("#{@name}-destroy", this)
-    @sync = new Offline.Sync(collection, this)
+    @sync = new Offline.Sync(@collection, this)
     @keys = options.keys || {}
     @autoPush = options.autoPush || false
 
@@ -77,7 +77,7 @@ class Offline.Storage
       localStorage.setItem key, value
     catch e
       if e.name is 'QUOTA_EXCEEDED_ERR'
-        this.trigger('quota_exceed')
+        @collection.trigger('quota_exceed')
       else
         @support = false
 
