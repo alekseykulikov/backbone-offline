@@ -180,6 +180,11 @@ class Offline.Sync
   ajax: (method, model, options) ->
     if Offline.onLine()
       Backbone.ajaxSync(method, model, options)
+      if @storage.getItem('offline')
+        @storage.removeItem('offline')
+        this.incremental()
+    else
+      @storage.setItem('offline', 'true')
 
   # @storage.sync.full() - full storage synchronization
   # 1. clear collection and store

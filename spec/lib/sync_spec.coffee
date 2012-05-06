@@ -4,7 +4,7 @@ describe 'Offline.Sync', ->
     @dreams = new Dreams()
     @storage = @dreams.storage
     @sync = @storage.sync
-    spyOn(Offline, "onLine").andReturn(true)
+    spyOn(Offline, 'onLine').andReturn(true)
 
   afterEach ->
     localStorage.clear()
@@ -12,16 +12,30 @@ describe 'Offline.Sync', ->
   describe 'ajax', ->
     beforeEach ->
       @dream = new Dream()
-      spyOn(Backbone, "ajaxSync")
+      spyOn(Backbone, 'ajaxSync')
 
-    it 'should calls Backbone.ajaxSync when onLine', ->
-      @sync.ajax("read", @dream, {})
-      expect(Backbone.ajaxSync).toHaveBeenCalledWith("read", @dream, {})
+    describe 'when onLine', ->
+      it 'should calls Backbone.ajaxSync', ->
+        @sync.ajax('read', @dream, {})
+        expect(Backbone.ajaxSync).toHaveBeenCalledWith("read", @dream, {})
 
-    it 'should does nothing when offline', ->
-      Offline.onLine.andReturn(false)
-      @sync.ajax("read", @dream, {})
-      expect(Backbone.ajaxSync.callCount).toBe(0)
+      describe 'when storage was offline', ->
+        beforeEach ->
+          @storage.setItem('offline', 'true')
+          spyOn(@sync, 'incremental')
+          @sync.ajax('read', @dream, {})
+
+        it 'should runs incremental sync', ->
+          expect(@sync.incremental).toHaveBeenCalled()
+
+        it 'should clears oflline item', ->
+          expect(@storage.getItem('offline')).toEqual(null)
+
+    describe 'when offline', ->
+      it 'should sets offline', ->
+        Offline.onLine.andReturn(false)
+        @sync.ajax('read', @dream, {})
+        expect(localStorage.getItem('offline')).toEqual('true')
 
   describe 'full', ->
     beforeEach ->
