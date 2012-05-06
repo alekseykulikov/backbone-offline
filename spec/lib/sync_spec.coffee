@@ -10,31 +10,22 @@ describe 'Offline.Sync', ->
     localStorage.clear()
 
   describe 'ajax', ->
-    beforeEach ->
-      @dream = new Dream()
-      spyOn(Backbone, 'ajaxSync')
-
     describe 'when onLine', ->
+      beforeEach ->
+        spyOn(Backbone, 'ajaxSync')
+        spyOn(@sync, 'prepareOptions')
+        @sync.ajax('read', @dreams, {})
+
       it 'should calls Backbone.ajaxSync', ->
-        @sync.ajax('read', @dream, {})
-        expect(Backbone.ajaxSync).toHaveBeenCalledWith("read", @dream, {})
+        expect(Backbone.ajaxSync).toHaveBeenCalledWith('read', @dreams, {})
 
-      describe 'when storage was offline', ->
-        beforeEach ->
-          @storage.setItem('offline', 'true')
-          spyOn(@sync, 'incremental')
-          @sync.ajax('read', @dream, {})
-
-        it 'should runs incremental sync', ->
-          expect(@sync.incremental).toHaveBeenCalled()
-
-        it 'should clears oflline item', ->
-          expect(@storage.getItem('offline')).toEqual(null)
+      it 'should runs prepareOptions', ->
+        expect(@sync.prepareOptions).toHaveBeenCalled()
 
     describe 'when offline', ->
       it 'should sets offline', ->
         Offline.onLine.andReturn(false)
-        @sync.ajax('read', @dream, {})
+        @sync.ajax('read', @dreams, {})
         expect(localStorage.getItem('offline')).toEqual('true')
 
   describe 'full', ->
@@ -103,6 +94,24 @@ describe 'Offline.Sync', ->
       spyOn(@sync, 'push')
       @sync.incremental()
       expect(@sync.push).toHaveBeenCalledWith()
+
+  describe 'prepareOptions', ->
+    beforeEach ->
+      @storage.setItem('offline', 'true')
+
+    it 'should clears oflline item', ->
+      @sync.prepareOptions({})
+      expect(@storage.getItem('offline')).toEqual(null)
+
+    it 'should change success function added call of incremental sync', ->
+      successCallback = jasmine.createSpy('-Success Callback-')
+      spyOn(@sync, 'incremental')
+      options = {success: successCallback}
+      @sync.prepareOptions(options)
+      options.success()
+
+      expect(successCallback.callCount).toBe(1)
+      expect(@sync.incremental).toHaveBeenCalled()
 
   describe 'pull', ->
     beforeEach ->
