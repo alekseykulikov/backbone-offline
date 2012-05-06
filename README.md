@@ -97,6 +97,7 @@ dreams.sync.push() # POST /api/dreams and PUT /api/dreams/:id
 
 ### Change Log
 
+* 0.3.0: Checkup localStorage quota, fixed bugs with full-sync, added auto runs incremental sync and manual sync on fetch 
 * 0.2.0: Fixed bugs, added `onLine()` method, added `autoPush` option, upgrade to Backbone 0.9.2
 * 0.1.1: First public release. Fixed bugs, added comments and documentation, refactoring
 * 0.1.0: Library was extracted from project http://saveideanow.com

@@ -30,7 +30,7 @@
     sync: function(method, model, options) {
       var store, _ref;
       store = model.storage || ((_ref = model.collection) != null ? _ref.storage : void 0);
-      if (store) {
+      if (store && (store != null ? store.support : void 0)) {
         return Offline.localSync(method, model, options, store);
       } else {
         return Backbone.ajaxSync(method, model, options);
@@ -49,11 +49,12 @@
 
     function Storage(name, collection, options) {
       this.name = name;
+      this.collection = collection;
       if (options == null) options = {};
       this.support = this.isLocalStorageSupport();
       this.allIds = new Offline.Index(this.name, this);
       this.destroyIds = new Offline.Index("" + this.name + "-destroy", this);
-      this.sync = new Offline.Sync(collection, this);
+      this.sync = new Offline.Sync(this.collection, this);
       this.keys = options.keys || {};
       this.autoPush = options.autoPush || false;
     }
@@ -73,7 +74,7 @@
         return localStorage.setItem(key, value);
       } catch (e) {
         if (e.name === 'QUOTA_EXCEEDED_ERR') {
-          return this.trigger('quota_exceed');
+          return this.collection.trigger('quota_exceed');
         } else {
           return this.support = false;
         }
@@ -225,7 +226,12 @@
     }
 
     Sync.prototype.ajax = function(method, model, options) {
-      if (Offline.onLine()) return Backbone.ajaxSync(method, model, options);
+      if (Offline.onLine()) {
+        this.prepareOptions(options);
+        return Backbone.ajaxSync(method, model, options);
+      } else {
+        return this.storage.setItem('offline', 'true');
+      }
     };
 
     Sync.prototype.full = function(options) {
@@ -259,6 +265,19 @@
           return _this.push();
         }
       });
+    };
+
+    Sync.prototype.prepareOptions = function(options) {
+      var success,
+        _this = this;
+      if (this.storage.getItem('offline')) {
+        this.storage.removeItem('offline');
+        success = options.success;
+        return options.success = function(response, status, xhr) {
+          success(response, status, xhr);
+          return _this.incremental();
+        };
+      }
     };
 
     Sync.prototype.pull = function(options) {
