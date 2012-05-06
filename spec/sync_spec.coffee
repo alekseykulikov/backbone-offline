@@ -53,10 +53,8 @@ describe 'Offline.Sync', ->
 
     it 'should store received data to localStorage', ->
       @sync.full(@options)
-      localStorage.removeItem('dreams')
-      localStorage.removeItem('dreams-destroy')
-
-      expect(localStorage.length).toEqual(3)
+      collectionKeys = _.filter Object.keys(localStorage), (key) -> (new RegExp 'dreams-(?!destroy)').test(key)
+      expect(collectionKeys.length).toEqual(3)
 
     it 'should generate new id and store received data locally', ->
       @sync.full(@options)

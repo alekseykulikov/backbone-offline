@@ -78,10 +78,12 @@
         });
       });
       it('should store received data to localStorage', function() {
+        var collectionKeys;
         this.sync.full(this.options);
-        localStorage.removeItem('dreams');
-        localStorage.removeItem('dreams-destroy');
-        return expect(localStorage.length).toEqual(3);
+        collectionKeys = _.filter(Object.keys(localStorage), function(key) {
+          return (new RegExp('dreams-(?!destroy)')).test(key);
+        });
+        return expect(collectionKeys.length).toEqual(3);
       });
       it('should generate new id and store received data locally', function() {
         var id, _i, _len, _ref, _results;

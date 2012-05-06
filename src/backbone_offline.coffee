@@ -5,7 +5,7 @@
 #    May be freely distributed according to MIT license.
 
 window.Offline =
-  VERSION: '0.2.0'
+  VERSION: '0.3.0.beta'
 
   # This is a method for CRUD operations with localStorage.
   # Delegates to 'Offline.Storage' and works as ‘Backbone.sync’ alternative
@@ -57,11 +57,35 @@ class Offline.Storage
 
   # Name of storage and collection link are required params
   constructor: (@name, collection, options = {}) ->
-    @allIds = new Offline.Index(@name)
-    @destroyIds = new Offline.Index("#{@name}-destroy")
+    @support = this.isLocalStorageSupport()
+    @allIds = new Offline.Index(@name, this)
+    @destroyIds = new Offline.Index("#{@name}-destroy", this)
     @sync = new Offline.Sync(collection, this)
     @keys = options.keys || {}
     @autoPush = options.autoPush || false
+
+  isLocalStorageSupport: ->
+    try
+      localStorage.setItem('isLocalStorageSupport', '1')
+      localStorage.removeItem('isLocalStorageSupport')
+      true
+    catch e
+      false
+
+  setItem: (key, value) ->
+    try
+      localStorage.setItem key, value
+    catch e
+      if e.name is 'QUOTA_EXCEEDED_ERR'
+        this.trigger('quota_exceed')
+      else
+        @support = true
+
+  removeItem: (key) ->
+    localStorage.removeItem(key)
+
+  getItem: (key)->
+    localStorage.getItem(key)
 
   # Add a model, giving it a unique GUID. Server id saving to "sid".
   # Set a sync's attributes updated_at, dirty and add
@@ -79,14 +103,14 @@ class Offline.Storage
     this.remove(model)
 
   find: (model, options = {}) ->
-    JSON.parse localStorage.getItem("#{@name}-#{model.id}")
+    JSON.parse this.getItem("#{@name}-#{model.id}")
 
   # Returns the array of all models currently in the storage.
   # And refreshes the storage into background
   findAll: (options = {}) ->
     unless options.local
       if this.isEmpty() then @sync.full() else @sync.incremental()
-    JSON.parse(localStorage.getItem("#{@name}-#{id}")) for id in @allIds.values
+    JSON.parse(this.getItem("#{@name}-#{id}")) for id in @allIds.values
 
   s4: ->
     (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1)
@@ -99,14 +123,14 @@ class Offline.Storage
     item.set(updated_at: (new Date()).toJSON(), dirty: true) unless options.local
 
     this.replaceKeyFields(item, 'local')
-    localStorage.setItem "#{@name}-#{item.id}", JSON.stringify(item)
+    this.setItem "#{@name}-#{item.id}", JSON.stringify(item)
     @allIds.add(item.id)
 
     @sync.pushItem(item) if @autoPush and !options.local
     return item
 
   remove: (item) ->
-    localStorage.removeItem "#{@name}-#{item.id}"
+    this.removeItem "#{@name}-#{item.id}"
     @allIds.remove(item.id)
 
     sid = item.get('sid')
@@ -115,14 +139,14 @@ class Offline.Storage
     return item
 
   isEmpty: ->
-    localStorage.getItem(@name) is null
+    this.getItem(@name) is null
 
   # Clears the current storage
   clear: ->
     keys = Object.keys(localStorage)
     collectionKeys = _.filter keys, (key) => (new RegExp @name).test(key)
-    localStorage.removeItem(key) for key in collectionKeys
-    localStorage.setItem(@name, '')
+    this.removeItem(key) for key in collectionKeys
+    this.setItem(@name, '')
     record.reset() for record in [@allIds, @destroyIds]
 
   # Replaces local-keys to server-keys based on options.keys.
@@ -238,12 +262,12 @@ class Offline.Sync
 class Offline.Index
 
   # @name - index name
-  # localStorage.setItem 'dreams', '1,2,3,4'
-  # records = new Offline.Index('dreams')
-  # records.values - an array based on localStorage data
+  # @storage.setItem 'dreams', '1,2,3,4'
+  # records = new Offline.Index('dreams', @storage)
+  # records.values - an array based on @storage data
   # => ['1', '2', '3', '4']
-  constructor: (@name) ->
-    store = localStorage.getItem(@name)
+  constructor: (@name, @storage) ->
+    store = @storage.getItem(@name)
     @values = (store && store.split(',')) || []
 
   # Add a new item to the end of list
@@ -263,7 +287,7 @@ class Offline.Index
     @values = _.without @values, itemId.toString()
     this.save()
 
-  save: -> localStorage.setItem @name, @values.join(',')
+  save: -> @storage.setItem @name, @values.join(',')
   reset: -> @values = []; this.save()
 
 # Use as wrapper for 'Backbone.Collection'

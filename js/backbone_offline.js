@@ -1,7 +1,7 @@
 (function() {
 
   window.Offline = {
-    VERSION: '0.2.0',
+    VERSION: '0.3.0.beta',
     localSync: function(method, model, options, store) {
       var resp;
       resp = (function() {
@@ -50,12 +50,43 @@
     function Storage(name, collection, options) {
       this.name = name;
       if (options == null) options = {};
-      this.allIds = new Offline.Index(this.name);
-      this.destroyIds = new Offline.Index("" + this.name + "-destroy");
+      this.support = this.isLocalStorageSupport();
+      this.allIds = new Offline.Index(this.name, this);
+      this.destroyIds = new Offline.Index("" + this.name + "-destroy", this);
       this.sync = new Offline.Sync(collection, this);
       this.keys = options.keys || {};
       this.autoPush = options.autoPush || false;
     }
+
+    Storage.prototype.isLocalStorageSupport = function() {
+      try {
+        localStorage.setItem('isLocalStorageSupport', '1');
+        localStorage.removeItem('isLocalStorageSupport');
+        return true;
+      } catch (e) {
+        return false;
+      }
+    };
+
+    Storage.prototype.setItem = function(key, value) {
+      try {
+        return localStorage.setItem(key, value);
+      } catch (e) {
+        if (e.name === 'QUOTA_EXCEEDED_ERR') {
+          return this.trigger('quota_exceed');
+        } else {
+          return this.support = true;
+        }
+      }
+    };
+
+    Storage.prototype.removeItem = function(key) {
+      return localStorage.removeItem(key);
+    };
+
+    Storage.prototype.getItem = function(key) {
+      return localStorage.getItem(key);
+    };
 
     Storage.prototype.create = function(model, options) {
       if (options == null) options = {};
@@ -79,7 +110,7 @@
 
     Storage.prototype.find = function(model, options) {
       if (options == null) options = {};
-      return JSON.parse(localStorage.getItem("" + this.name + "-" + model.id));
+      return JSON.parse(this.getItem("" + this.name + "-" + model.id));
     };
 
     Storage.prototype.findAll = function(options) {
@@ -96,7 +127,7 @@
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         id = _ref[_i];
-        _results.push(JSON.parse(localStorage.getItem("" + this.name + "-" + id)));
+        _results.push(JSON.parse(this.getItem("" + this.name + "-" + id)));
       }
       return _results;
     };
@@ -125,7 +156,7 @@
         });
       }
       this.replaceKeyFields(item, 'local');
-      localStorage.setItem("" + this.name + "-" + item.id, JSON.stringify(item));
+      this.setItem("" + this.name + "-" + item.id, JSON.stringify(item));
       this.allIds.add(item.id);
       if (this.autoPush && !options.local) this.sync.pushItem(item);
       return item;
@@ -133,7 +164,7 @@
 
     Storage.prototype.remove = function(item) {
       var sid;
-      localStorage.removeItem("" + this.name + "-" + item.id);
+      this.removeItem("" + this.name + "-" + item.id);
       this.allIds.remove(item.id);
       sid = item.get('sid');
       if (this.autoPush && sid !== 'new') this.sync.flushItem(sid);
@@ -141,7 +172,7 @@
     };
 
     Storage.prototype.isEmpty = function() {
-      return localStorage.getItem(this.name) === null;
+      return this.getItem(this.name) === null;
     };
 
     Storage.prototype.clear = function() {
@@ -153,9 +184,9 @@
       });
       for (_i = 0, _len = collectionKeys.length; _i < _len; _i++) {
         key = collectionKeys[_i];
-        localStorage.removeItem(key);
+        this.removeItem(key);
       }
-      localStorage.setItem(this.name, '');
+      this.setItem(this.name, '');
       _ref = [this.allIds, this.destroyIds];
       _results = [];
       for (_j = 0, _len2 = _ref.length; _j < _len2; _j++) {
@@ -333,10 +364,11 @@
 
   Offline.Index = (function() {
 
-    function Index(name) {
+    function Index(name, storage) {
       var store;
       this.name = name;
-      store = localStorage.getItem(this.name);
+      this.storage = storage;
+      store = this.storage.getItem(this.name);
       this.values = (store && store.split(',')) || [];
     }
 
@@ -353,7 +385,7 @@
     };
 
     Index.prototype.save = function() {
-      return localStorage.setItem(this.name, this.values.join(','));
+      return this.storage.setItem(this.name, this.values.join(','));
     };
 
     Index.prototype.reset = function() {
