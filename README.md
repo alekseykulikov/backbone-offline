@@ -81,7 +81,7 @@ dreams.fetch() # GET /api/dreams
 dreams.create(name: 'Visit Iceland') # add new dream to localStorage
 dream = dreams.at(3)
 dreams.save(name: 'Diving with scuba') # local save
-dreams.sync.push() # POST /api/dreams and PUT /api/dreams/:id
+dreams.storage.sync.push() # POST /api/dreams and PUT /api/dreams/:id
 ````
 
 ### How to contribute
