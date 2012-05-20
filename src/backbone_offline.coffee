@@ -132,7 +132,7 @@ class Offline.Storage
   local_id1: ((1+Math.random())*0x100000 | 0).toString(16).substring(1)
   local_id2: ((1+Math.random())*0x100000 | 0).toString(16).substring(1)
   mid: ->
-    parseInt($.datepicker.formatDate("@",new Date)/1000 | 0).toString(16)+@local_id1+@local_id2+(++@increment_id).toString(16).substring(1)
+    ((new Date).getTime()/1000 | 0).toString(16)+@local_id1+@local_id2+(++@increment_id).toString(16).substring(1)
 
   guid: ->
     this.s4() + this.s4() + '-' + this.s4() + '-' + this.s4() + '-' + this.s4() + '-' + this.s4() + this.s4() + this.s4()
