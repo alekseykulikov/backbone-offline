@@ -197,6 +197,10 @@ describe 'Offline.Storage', ->
       localStorage.setItem('dreams', '1,2,3')
       expect(@storage.isEmpty()).toBeFalsy()
 
+  describe 'mid', ->
+    it "should return 24 hex digits", ->
+      expect(@storage.mid()).toMatch /[a-f,0-9]{24}/
+
   describe 'clear', ->
     beforeEach ->
       localStorage.setItem('dreams', '1234')
