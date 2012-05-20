@@ -128,11 +128,19 @@ class Offline.Storage
   s4: ->
     (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1)
 
+  increment_id: 0x1000000
+  local_id1: ((1+Math.random())*0x100000 | 0).toString(16).substring(1)
+  local_id2: ((1+Math.random())*0x100000 | 0).toString(16).substring(1)
+  mid: ->
+    parseInt($.datepicker.formatDate("@",new Date)/1000 | 0).toString(16)+@local_id1+@local_id2+(++@increment_id).toString(16).substring(1)
+
   guid: ->
     this.s4() + this.s4() + '-' + this.s4() + '-' + this.s4() + '-' + this.s4() + '-' + this.s4() + this.s4() + this.s4()
 
   save: (item, options = {}) ->
-    item.set(sid: item.attributes?.sid || item.attributes?.id || 'new', id: this.guid()) if options.regenerateId
+    if options.regenerateId
+      id=if options.id=="mid" then id=@mid() else id=@guid()
+      item.set(sid: item.attributes?.sid || item.attributes?.id || 'new', id: id)
     item.set(updated_at: (new Date()).toJSON(), dirty: true) unless options.local
 
     this.replaceKeyFields(item, 'local')
@@ -269,7 +277,6 @@ class Offline.Sync
   pushItem: (item) ->
     @storage.replaceKeyFields(item, 'server')
     localId = item.id
-    delete item.attributes.id
     [method, item.id] = if item.get('sid') is 'new' then ['create', null] else ['update', item.attributes.sid]
 
     this.ajax method, item, success: (response, status, xhr) =>
