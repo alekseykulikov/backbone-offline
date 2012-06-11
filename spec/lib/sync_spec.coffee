@@ -45,6 +45,13 @@ describe 'Offline.Sync', ->
       @sync.full(@options)
       expect(resetCallback.callCount).toBe(1)
 
+    it 'should not reset collection if silent is passed', ->
+      resetCallback = jasmine.createSpy('-Reset Callback-')
+      @sync.collection.items.on('reset', resetCallback)
+      @options.silent = true
+      @sync.full(@options)
+      expect(resetCallback.callCount).toBe(0)
+
     it 'should not trigger "add" callbacks', ->
       addCallback = jasmine.createSpy('-Add Callback-')
       @sync.collection.items.on('add', addCallback)

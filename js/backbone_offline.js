@@ -252,7 +252,9 @@
               regenerateId: true
             });
           }
-          _this.collection.items.trigger('reset');
+          if (!options.silent) {
+            _this.collection.items.trigger('reset');
+          }
           if (options.success) return options.success(response);
         }
       });
