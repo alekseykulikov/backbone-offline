@@ -205,7 +205,7 @@ class Offline.Sync
       @storage.clear()
       @collection.items.reset([], silent: true)
       @collection.items.create(item, silent: true, local: true, regenerateId: true) for item in response
-      @collection.items.trigger('reset')
+      @collection.items.trigger('reset') unless options.silent
       options.success(response) if options.success
 
   # @storage.sync.incremental() - incremental storage synchronization
