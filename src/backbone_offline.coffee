@@ -160,7 +160,6 @@ class Offline.Storage
     keys = Object.keys(localStorage)
     collectionKeys = _.filter keys, (key) => (new RegExp @name).test(key)
     @removeItem(key) for key in collectionKeys
-    @setItem(@name, '')
     record.reset() for record in [@allIds, @destroyIds]
 
   # Replaces local-keys to server-keys based on options.keys.
@@ -319,7 +318,7 @@ class Offline.Index
 
   reset: ->
     @values = []
-    @save()
+    @storage.removeItem @name
 
 # Use as wrapper for 'Backbone.Collection'
 class Offline.Collection

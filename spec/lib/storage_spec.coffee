@@ -208,9 +208,9 @@ describe 'Offline.Storage', ->
       @storage.clear()
       expect(localStorage.getItem('dreams-1234')).toBeNull()
 
-    it 'sets collection-key to ""', ->
+    it 'storage should be empty', ->
       @storage.clear()
-      expect(localStorage.getItem('dreams')).toEqual('')
+      expect(@storage.isEmpty()).toBeTruthy()
 
     it 'does not clear other collections', ->
       @storage.clear()
