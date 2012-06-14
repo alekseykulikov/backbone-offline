@@ -107,7 +107,7 @@ describe 'Offline.Storage', ->
     it 'should call "remove"', ->
       spyOn(@storage, 'remove')
       @storage.destroy(@dream)
-      expect(@storage.remove).toHaveBeenCalledWith(@dream)
+      expect(@storage.remove).toHaveBeenCalledWith(@dream, {})
 
     it 'should change @destroyIds', ->
       @dream.set 'sid', '1'
@@ -178,6 +178,7 @@ describe 'Offline.Storage', ->
     it 'should remove item from localStorage', ->
       @storage.remove(@dream)
       expect(localStorage.getItem 'dreams-dcba').toBeNull()
+
     it 'should remove item.id from @allIds', ->
       @storage.remove(@dream)
       expect(_.include @storage.values, 'dcba').toBeFalsy()

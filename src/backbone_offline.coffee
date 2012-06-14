@@ -113,7 +113,7 @@ class Offline.Storage
   # Delete a model from the storage
   destroy: (model, options = {}) ->
     @destroyIds.add(sid) unless options.local or (sid = model.get('sid')) is 'new'
-    this.remove(model)
+    this.remove(model, options)
 
   find: (model, options = {}) ->
     JSON.parse this.getItem("#{@name}-#{model.id}")
@@ -142,12 +142,12 @@ class Offline.Storage
     @sync.pushItem(item) if @autoPush and !options.local
     return item
 
-  remove: (item) ->
+  remove: (item, options = {}) ->
     this.removeItem "#{@name}-#{item.id}"
     @allIds.remove(item.id)
 
     sid = item.get('sid')
-    @sync.flushItem(sid) if @autoPush and sid isnt 'new'
+    @sync.flushItem(sid) if @autoPush and sid isnt 'new' and !options.local
 
     return item
 
