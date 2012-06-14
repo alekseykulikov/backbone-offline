@@ -5,7 +5,7 @@
 #    May be freely distributed according to MIT license.
 
 window.Offline =
-  VERSION: '0.3.0.beta'
+  VERSION: '0.4.0.alfa'
 
   # This is a method for CRUD operations with localStorage.
   # Delegates to 'Offline.Storage' and works as ‘Backbone.sync’ alternative
@@ -57,7 +57,7 @@ class Offline.Storage
 
   # Name of storage and collection link are required params
   constructor: (@name, @collection, options = {}) ->
-    @support = this.isLocalStorageSupport()
+    @support = @isLocalStorageSupport()
     @allIds = new Offline.Index(@name, this)
     @destroyIds = new Offline.Index("#{@name}-destroy", this)
     @sync = new Offline.Sync(@collection, this)
@@ -104,62 +104,63 @@ class Offline.Storage
   # Set a sync's attributes updated_at, dirty and add
   create: (model, options = {}) ->
     options.regenerateId = true
-    this.save(model, options)
+    @save(model, options)
 
   # Update a model into the set. Set a sync's attributes update_at and dirty.
   update: (model, options = {}) ->
-    this.save(model, options)
+    @save(model, options)
 
   # Delete a model from the storage
   destroy: (model, options = {}) ->
     @destroyIds.add(sid) unless options.local or (sid = model.get('sid')) is 'new'
-    this.remove(model, options)
+    @remove(model, options)
 
   find: (model, options = {}) ->
-    JSON.parse this.getItem("#{@name}-#{model.id}")
+    JSON.parse @getItem("#{@name}-#{model.id}")
 
   # Returns the array of all models currently in the storage.
   # And refreshes the storage into background
   findAll: (options = {}) ->
     unless options.local
-      if this.isEmpty() then @sync.full() else @sync.incremental()
-    JSON.parse(this.getItem("#{@name}-#{id}")) for id in @allIds.values
+      if @isEmpty() then @sync.full() else @sync.incremental()
+    JSON.parse(@getItem("#{@name}-#{id}")) for id in @allIds.values
 
   s4: ->
     (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1)
 
   guid: ->
-    this.s4() + this.s4() + '-' + this.s4() + '-' + this.s4() + '-' + this.s4() + '-' + this.s4() + this.s4() + this.s4()
+    @s4() + @s4() + '-' + @s4() + '-' + @s4() + '-' + @s4() + '-' + @s4() + @s4() + @s4()
 
   save: (item, options = {}) ->
-    item.set(sid: item.attributes?.sid || item.attributes?.id || 'new', id: this.guid()) if options.regenerateId
+    item.set(sid: item.attributes?.sid || item.attributes?.id || 'new', id: @guid()) if options.regenerateId
     item.set(updated_at: (new Date()).toJSON(), dirty: true) unless options.local
 
-    this.replaceKeyFields(item, 'local')
-    this.setItem "#{@name}-#{item.id}", JSON.stringify(item)
+    @replaceKeyFields(item, 'local')
+    @setItem "#{@name}-#{item.id}", JSON.stringify(item)
     @allIds.add(item.id)
 
     @sync.pushItem(item) if @autoPush and !options.local
-    return item
+
+    item
 
   remove: (item, options = {}) ->
-    this.removeItem "#{@name}-#{item.id}"
+    @removeItem "#{@name}-#{item.id}"
     @allIds.remove(item.id)
 
     sid = item.get('sid')
     @sync.flushItem(sid) if @autoPush and sid isnt 'new' and !options.local
 
-    return item
+    item
 
   isEmpty: ->
-    this.getItem(@name) is null
+    @getItem(@name) is null
 
   # Clears the current storage
   clear: ->
     keys = Object.keys(localStorage)
     collectionKeys = _.filter keys, (key) => (new RegExp @name).test(key)
-    this.removeItem(key) for key in collectionKeys
-    this.setItem(@name, '')
+    @removeItem(key) for key in collectionKeys
+    @setItem(@name, '')
     record.reset() for record in [@allIds, @destroyIds]
 
   # Replaces local-keys to server-keys based on options.keys.
@@ -177,7 +178,7 @@ class Offline.Storage
           else
             collection.get(replacedField)?.get('sid')
           item[field] = newValue unless _.isUndefined(newValue)
-    return item
+    item
 
 # Sync collection with a server. All server requests delegated to 'Backbone.sync'
 # It provides a backward-compability. If your application is working with 'Backbone.sync'
@@ -192,7 +193,7 @@ class Offline.Sync
 
   ajax: (method, model, options) ->
     if Offline.onLine()
-      this.prepareOptions(options)
+      @prepareOptions(options)
       Backbone.ajaxSync(method, model, options)
     else
       @storage.setItem('offline', 'true')
@@ -201,7 +202,7 @@ class Offline.Sync
   # 1. clear collection and store
   # 2. load new data
   full: (options = {}) ->
-    this.ajax 'read', @collection.items, success: (response, status, xhr) =>
+    @ajax 'read', @collection.items, success: (response, status, xhr) =>
       @storage.clear()
       @collection.items.reset([], silent: true)
       @collection.items.create(item, silent: true, local: true, regenerateId: true) for item in response
@@ -212,7 +213,7 @@ class Offline.Sync
   # 1. pull() - request data from server
   # 2. push() - send modified data to server
   incremental: ->
-    this.pull success: => this.push()
+    @pull success: => @push()
 
   # Runs incremental sync when storage was offline
   # after current request therefore don't duplicate requests
@@ -222,7 +223,7 @@ class Offline.Sync
       success = options.success
       options.success = (response, status, xhr) =>
         success(response, status, xhr)
-        this.incremental()
+        @incremental()
 
   # Requests data from the server and merges it with a collection.
   # It's useful when you want to refresh your collection and don't want to reload it completely.
@@ -231,17 +232,17 @@ class Offline.Sync
   #
   # @storage.sync.pull()
   pull: (options = {}) ->
-    this.ajax 'read', @collection.items, success: (response, status, xhr) =>
+    @ajax 'read', @collection.items, success: (response, status, xhr) =>
       @collection.destroyDiff(response)
-      this.pullItem(item) for item in response
+      @pullItem(item) for item in response
       options.success() if options.success
 
   pullItem: (item) ->
     local = @collection.get(item.id)
     if local
-      this.updateItem(item, local)
+      @updateItem(item, local)
     else
-      this.createItem(item)
+      @createItem(item)
 
   createItem: (item) ->
     unless _.include(@storage.destroyIds.values, item.id.toString())
@@ -263,8 +264,8 @@ class Offline.Sync
   # and sends every object to server using 'Backbone.sync' method
   # after that it sends deleted objects to the server
   push: ->
-    this.pushItem(item) for item in @collection.dirty()
-    this.flushItem(sid) for sid in @storage.destroyIds.values
+    @pushItem(item) for item in @collection.dirty()
+    @flushItem(sid) for sid in @storage.destroyIds.values
 
   pushItem: (item) ->
     @storage.replaceKeyFields(item, 'server')
@@ -272,7 +273,7 @@ class Offline.Sync
     delete item.attributes.id
     [method, item.id] = if item.get('sid') is 'new' then ['create', null] else ['update', item.attributes.sid]
 
-    this.ajax method, item, success: (response, status, xhr) =>
+    @ajax method, item, success: (response, status, xhr) =>
       item.set(sid: response.id) if method is 'create'
       item.save {dirty: false}, {local: true}
 
@@ -280,7 +281,7 @@ class Offline.Sync
 
   flushItem: (sid) ->
     model = @collection.fakeModel(sid)
-    this.ajax 'delete', model, success: (response, status, xhr) =>
+    @ajax 'delete', model, success: (response, status, xhr) =>
       @storage.destroyIds.remove(sid)
 
 # Manage indexes storing to localStorage.
@@ -303,7 +304,7 @@ class Offline.Index
   add: (itemId) ->
     unless _.include(@values, itemId.toString())
       @values.push itemId.toString()
-    this.save()
+    @save()
 
   # Remove element from a list of values
   # records.remove '3'
@@ -311,10 +312,14 @@ class Offline.Index
   # => ['1', '2', '4', '5']
   remove: (itemId) ->
     @values = _.without @values, itemId.toString()
-    this.save()
+    @save()
 
-  save: -> @storage.setItem @name, @values.join(',')
-  reset: -> @values = []; this.save()
+  save: ->
+    @storage.setItem @name, @values.join(',')
+
+  reset: ->
+    @values = []
+    @save()
 
 # Use as wrapper for 'Backbone.Collection'
 class Offline.Collection
@@ -334,12 +339,10 @@ class Offline.Collection
   # destory old models from the collection which have not marked as "new"
   destroyDiff: (response) ->
     diff = _.difference(_.without(@items.pluck('sid'), 'new'), _.pluck(response, 'id'))
-    this.get(sid)?.destroy(local: true) for sid in diff
+    @get(sid)?.destroy(local: true) for sid in diff
 
   # Use to create a fake model for the set
   fakeModel: (sid) ->
-    model = new Backbone.Model()
-    model.id = sid
+    model = new Backbone.Model(id: sid)
     model.urlRoot = @items.url
-
-    return model
+    model
