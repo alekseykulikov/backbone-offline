@@ -6,7 +6,7 @@ Adds ability to store the data to localStorage and sync data with a server. It i
 * not to bootstrap initial data every time you save it to the localStorage. You can refresh your collection when you need and load initial data dramatically faster.
 * create standalone HTML5 app which periodically syncs data to the server.
 
-This library was extracted from project [Saveidea](http://saveideanow.com) and you can check open source project [Dreamer](https://github.com/Ask11/dreamer) as an example.
+This library was extracted from project [Saveidea](http://saveideanow.com) and you can check open source project [Mydreams](https://github.com/Ask11/mydreams) as an example.
 
 ## How to use
 
@@ -94,7 +94,7 @@ dreams.storage.sync.push() # POST /api/dreams and PUT /api/dreams/:id
 ### Examples
 
 * [Saveidea](http://saveideanow.com/demo_app) is a web-app for storing ideas, that appear in your mind during the day. It uses this library to work offline in the browser.
-* [Dreamer](http://dreamer.herokuapp.com/) is a super simple web-application which allows to write your dreams ([open source](https://github.com/Ask11/dreamer)).
+* [Mydreams](http://mydreams.herokuapp.com/) is a super simple web-application which allows to write your dreams ([open source](https://github.com/Ask11/mydreams)).
 
 ### Change Log
 
