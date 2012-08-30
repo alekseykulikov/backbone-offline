@@ -119,9 +119,9 @@
       if (options == null) options = {};
       if (!options.local) {
         if (this.isEmpty()) {
-          this.sync.full();
+          this.sync.full(options);
         } else {
-          this.sync.incremental();
+          this.sync.incremental(options);
         }
       }
       _ref = this.allIds.values;
@@ -260,13 +260,13 @@
       });
     };
 
-    Sync.prototype.incremental = function() {
+    Sync.prototype.incremental = function(options) {
       var _this = this;
-      return this.pull({
+      return this.pull(_.extend(options, {
         success: function() {
           return _this.push();
         }
-      });
+      }));
     };
 
     Sync.prototype.prepareOptions = function(options) {
@@ -285,7 +285,7 @@
     Sync.prototype.pull = function(options) {
       var _this = this;
       if (options == null) options = {};
-      return this.ajax('read', this.collection.items, {
+      return this.ajax('read', this.collection.items, _.extend(options, {
         success: function(response, status, xhr) {
           var item, _i, _len;
           _this.collection.destroyDiff(response);
@@ -295,7 +295,7 @@
           }
           if (options.success) return options.success();
         }
-      });
+      }));
     };
 
     Sync.prototype.pullItem = function(item) {
