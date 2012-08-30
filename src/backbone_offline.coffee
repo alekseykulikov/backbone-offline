@@ -122,7 +122,7 @@ class Offline.Storage
   # And refreshes the storage into background
   findAll: (options = {}) ->
     unless options.local
-      if @isEmpty() then @sync.full() else @sync.incremental()
+      if @isEmpty() then @sync.full(options) else @sync.incremental(options)
     JSON.parse(@getItem("#{@name}-#{id}")) for id in @allIds.values
 
   s4: ->
@@ -212,7 +212,7 @@ class Offline.Sync
   # @storage.sync.incremental() - incremental storage synchronization
   # 1. pull() - request data from server
   # 2. push() - send modified data to server
-  incremental: ->
+  incremental:(options = {}) ->
     @pull _.extend {}, options, success: => @push()
 
   # Runs incremental sync when storage was offline
