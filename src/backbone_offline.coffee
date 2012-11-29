@@ -129,11 +129,20 @@ do (global = window, _, Backbone) ->
     s4: ->
       (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1)
 
+    incrementId: 0x1000000
+    localId1: ((1+ Math.random()) * 0x100000 | 0).toString(16).substring(1)
+    localId2: ((1+ Math.random()) * 0x100000 | 0).toString(16).substring(1)
+
+    mid: ->
+       ((new Date).getTime()/1000 | 0).toString(16) + @localId1 + @localId2 + (++@incrementId).toString(16).substring(1)
+
     guid: ->
       @s4() + @s4() + '-' + @s4() + '-' + @s4() + '-' + @s4() + '-' + @s4() + @s4() + @s4()
 
     save: (item, options = {}) ->
-      item.set(sid: item.attributes?.sid || item.attributes?.id || 'new', id: @guid()) if options.regenerateId
+      if options.regenerateId
+        id = if options.id is 'mid' then @mid() else @guid()
+        item.set(sid: item.attributes?.sid || item.attributes?.id || 'new', id: id)
       item.set(updated_at: (new Date()).toJSON(), dirty: true) unless options.local
 
       @replaceKeyFields(item, 'local')
