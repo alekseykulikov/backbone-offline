@@ -18,7 +18,7 @@ do (global = window, _, Backbone) ->
         when 'update' then store.update(model, options)
         when 'delete' then store.destroy(model, options)
 
-      if resp then options.success() else options.error?('Record not found')
+      if resp then options.success(resp.attributes ? resp) else options.error?('Record not found')
 
     # Overrides default 'Backbone.sync'. It checks 'storage' property of the model or collection
     # and then delegates to 'Offline.localSync' when property exists else calls the default 'Backbone.sync' with received params.

@@ -5,7 +5,7 @@
     global.Offline = {
       VERSION: '0.4.1.alfa',
       localSync: function(method, model, options, store) {
-        var resp;
+        var resp, _ref;
         resp = (function() {
           switch (method) {
             case 'read':
@@ -24,7 +24,7 @@
           }
         })();
         if (resp) {
-          return options.success();
+          return options.success((_ref = resp.attributes) != null ? _ref : resp);
         } else {
           return typeof options.error === "function" ? options.error('Record not found') : void 0;
         }
