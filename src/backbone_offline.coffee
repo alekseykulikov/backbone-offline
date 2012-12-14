@@ -6,7 +6,7 @@
 
 do (global = window, _, Backbone) ->
   global.Offline =
-    VERSION: '0.4.0.alfa'
+    VERSION: '0.4.1.alfa'
 
     # This is a method for CRUD operations with localStorage.
     # Delegates to 'Offline.Storage' and works as ‘Backbone.sync’ alternative
@@ -18,7 +18,7 @@ do (global = window, _, Backbone) ->
         when 'update' then store.update(model, options)
         when 'delete' then store.destroy(model, options)
 
-      if resp then options.success(resp) else options.error('Record not found')
+      if resp then options.success() else options.error?('Record not found')
 
     # Overrides default 'Backbone.sync'. It checks 'storage' property of the model or collection
     # and then delegates to 'Offline.localSync' when property exists else calls the default 'Backbone.sync' with received params.
@@ -150,7 +150,6 @@ do (global = window, _, Backbone) ->
       @allIds.add(item.id)
 
       @sync.pushItem(item) if @autoPush and !options.local
-
       item
 
     remove: (item, options = {}) ->
@@ -264,7 +263,7 @@ do (global = window, _, Backbone) ->
     updateItem: (item, model) ->
       if (new Date(model.get 'updated_at')) < (new Date(item.updated_at))
         delete item.id
-        model.save item, local: true
+        model.save(item, local: true)
 
     # Use to send modifyed data to the server
     # You can use it manually for sending changes

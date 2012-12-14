@@ -61,7 +61,7 @@ describe 'Offline.Sync', ->
     it 'should request data from server', ->
       spyOn($, 'ajax')
       @sync.full(@options)
-      expect($.ajax).toHaveBeenCalledWith type: 'GET', dataType: 'json', url: '/api/dreams', success: jasmine.any(Function)
+      expect($.ajax.mostRecentCall.args[0].url).toEqual '/api/dreams'
 
     it 'should store received data to localStorage', ->
       @sync.full(@options)
@@ -131,7 +131,7 @@ describe 'Offline.Sync', ->
     it 'should request data from server', ->
       spyOn($, 'ajax')
       @sync.pull()
-      expect($.ajax).toHaveBeenCalledWith type: 'GET', dataType: 'json', url: '/api/dreams', success: jasmine.any(Function)
+      expect($.ajax.mostRecentCall.args[0].url).toEqual '/api/dreams'
 
     it 'should destroy old items', ->
       spyOn(@sync.collection, 'destroyDiff')
