@@ -3,7 +3,7 @@
 
   (function(global, _, Backbone) {
     global.Offline = {
-      VERSION: '0.4.0.alfa',
+      VERSION: '0.4.1.alfa',
       localSync: function(method, model, options, store) {
         var resp;
         resp = (function() {
@@ -24,9 +24,9 @@
           }
         })();
         if (resp) {
-          return options.success(resp);
+          return options.success();
         } else {
-          return options.error('Record not found');
+          return typeof options.error === "function" ? options.error('Record not found') : void 0;
         }
       },
       sync: function(method, model, options) {
