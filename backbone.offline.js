@@ -1,5 +1,5 @@
-;(function(Backbone) {
+;(function(_, Backbone) {
   'use strict';
 
   // The code will here
-})(Backbone);
+})(_, Backbone);
