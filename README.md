@@ -4,11 +4,9 @@
 // Quick Example
 
 define('lib/offline', function(require, exports, module) {
-  'use strict';
-
-  Trees = require('collections/trees');
-  Cards = require('collections/cards');
-  Users = require('collections/users');
+  var Trees = require('collections/trees');
+  var Cards = require('collections/cards');
+  var Users = require('collections/users');
 
   module.exports = Backbone.Offline.extend({
     paths: {
