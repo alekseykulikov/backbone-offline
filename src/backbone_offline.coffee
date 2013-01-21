@@ -6,7 +6,7 @@
 
 do (global = window, _, Backbone) ->
   global.Offline =
-    VERSION: '0.4.1.alfa'
+    VERSION: '0.4.2'
 
     # This is a method for CRUD operations with localStorage.
     # Delegates to 'Offline.Storage' and works as ‘Backbone.sync’ alternative

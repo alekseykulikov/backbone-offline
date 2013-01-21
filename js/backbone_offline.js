@@ -3,7 +3,7 @@
 
   (function(global, _, Backbone) {
     global.Offline = {
-      VERSION: '0.4.1.alfa',
+      VERSION: '0.4.2',
       localSync: function(method, model, options, store) {
         var resp, _ref;
         resp = (function() {
