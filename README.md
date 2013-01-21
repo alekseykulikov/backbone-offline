@@ -1,37 +1,30 @@
-## Coming soon
+## Quick Example
 
 ```javascript
-// Quick Example
-
 define('lib/offline', function(require, exports, module) {
-  var Trees = require('collections/trees');
-  var Cards = require('collections/cards');
-  var Users = require('collections/users');
+  var Trees = require('collections/trees'),
+      Cards = require('collections/cards'),
+      Users = require('collections/users');
 
-  module.exports = Backbone.Offline.extend({
-    paths: {
-      'api/trees': {
-        collection: Trees,
-        resources: {
-          'cards': Cards
+  var offline = new Backbone.Offline(app.currentUser.id, {
+    'trees': {
+      collection: Trees,
+      resources: {
+        'cards': {
+          collection: Cards,
+          syncUrl: 'api/cards'
         }
-      },
-      'api/users': Users
+      }
     },
-
-    initialize: function() {
-      this.on('sync:start', this.startSync, this);
-      this.on('sync:end',   this.endSync, this);
-    },
-
-    startSync: function() {
-      console.log('sync started');
-    },
-
-    endSync: function() {
-      console.log('sync ended');
-    }
+    'users': Users
   });
-});
 
+  offline.on('sync:start', startSync);
+  offline.on('sync:end',   endSync);
+
+  function startSync() { console.log('sync started'); }
+  function endSync()   { console.log('sync ended'); }
+
+  module.exports = offline;
+});
 ```
