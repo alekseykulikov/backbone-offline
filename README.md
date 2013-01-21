@@ -3,34 +3,37 @@
 ```javascript
 // Quick Example
 
-Trees = require('collections/trees');
-Cards = require('collections/cards');
-Users = require('collections/users');
+define('lib/offline', function(require, exports, module) {
+  'use strict';
 
-Backbone.Offline = _.extend({}, Backbone.Events);
+  Trees = require('collections/trees');
+  Cards = require('collections/cards');
+  Users = require('collections/users');
 
-Backbone.Offline.extend({
-  paths: {
-    'api/trees': {
-      collection: Trees,
-      resources: {
-        'cards': Cards
-      }
+  module.exports = Backbone.Offline.extend({
+    paths: {
+      'api/trees': {
+        collection: Trees,
+        resources: {
+          'cards': Cards
+        }
+      },
+      'api/users': Users
     },
-    'api/users': Users
-  },
 
-  initialize: function() {
-    this.on('sync:start', this.startSync, this);
-    this.on('sync:end',   this.endSync, this);
-  },
+    initialize: function() {
+      this.on('sync:start', this.startSync, this);
+      this.on('sync:end',   this.endSync, this);
+    },
 
-  startSync: function() {
-    console.log('sync started');
-  },
+    startSync: function() {
+      console.log('sync started');
+    },
 
-  endSync: function() {
-    console.log('sync ended');
-  }
+    endSync: function() {
+      console.log('sync ended');
+    }
+  });
 });
+
 ```

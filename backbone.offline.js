@@ -1,5 +1,10 @@
 ;(function(_, Backbone) {
   'use strict';
 
-  // The code will here
+  Backbone.Offline = function(options) {
+    this.initialize(options);
+  };
+
+  _.extend(Backbone.Offline.prototype, Backbone.Events, {
+  });
 })(_, Backbone);
