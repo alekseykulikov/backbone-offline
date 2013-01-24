@@ -7,6 +7,10 @@
 do (global = window, _, Backbone) ->
   global.Offline =
     VERSION: '0.4.2'
+    
+    backboneIsPre_0_9_10: ->
+      backboneVersionNumbers = _.map (Backbone.VERSION.split "."), parseFloat
+      return not (backboneVersionNumbers[0] > 0 or backboneVersionNumbers[1] > 9) and backboneVersionNumbers[2] < 10
 
     # This is a method for CRUD operations with localStorage.
     # Delegates to 'Offline.Storage' and works as ‘Backbone.sync’ alternative
@@ -18,7 +22,13 @@ do (global = window, _, Backbone) ->
         when 'update' then store.update(model, options)
         when 'delete' then store.destroy(model, options)
 
-      if resp then options.success(resp.attributes ? resp) else options.error?('Record not found')
+      if resp
+        if @backboneIsPre_0_9_10()
+          options.success(resp.attributes ? resp)
+        else
+          options.success(model, resp.attributes ? resp, options)
+      else
+        options.error?('Record not found')
 
     # Overrides default 'Backbone.sync'. It checks 'storage' property of the model or collection
     # and then delegates to 'Offline.localSync' when property exists else calls the default 'Backbone.sync' with received params.
