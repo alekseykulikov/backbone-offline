@@ -1,27 +1,21 @@
 ;(function(_, Backbone) {
   'use strict';
 
-  function Store(options) {
+  function Store(options) {}
 
-  }
+  Backbone.Offline = function(id, options) {
+    if (!id) throw new Error('Setup storage id');
+    if (!options) options = {};
 
-  var Offline = Backbone.Offline = function() {
-    this._initStore();
-    this.initialize.apply(this, arguments);
+    this._initStore(options.store);
   };
 
-  _.extend(Offline.prototype, Backbone.Events, {
-    // Default constructor by Backbone's convention
-    initialize: function() {},
-
+  _.extend(Backbone.Offline.prototype, Backbone.Events, {
     // Parse store options and create internal sync rules
-    _initStore: function() {
-      if (!this.store) return;
+    _initStore: function(store) {
+      if (!store) return;
     }
   });
-
-  // Set up inheritance
-  Offline.extend = Backbone.Model.extend;
 
   // If model or collection has store attribute,
   // sync will handle by store
