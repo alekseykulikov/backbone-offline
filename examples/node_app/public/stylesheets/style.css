@@ -1,7 +1,9 @@
-body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+.nav-collapse .nav > li > a:hover, .nav-collapse .nav > li.active > a {
+  color: #f2f2f2;
 }
-a {
-  color: #00b7ff;
+
+@media (min-width: 980px) {
+  #application {
+    padding-top: 60px;
+  }
 }
