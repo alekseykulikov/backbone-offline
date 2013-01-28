@@ -5,7 +5,7 @@
    * Models
    */
 
-  // Note contains body, tags, createAt
+  // Note contains body, tags, createdAt
   var Notes = Backbone.Collection.extend({
     url: 'api/notes'
   });

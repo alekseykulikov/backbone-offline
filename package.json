@@ -20,6 +20,7 @@
   "devDependencies": {
     "mocha": "*",
     "chai": "*",
-    "grunt": "~0.3.17"
+    "grunt": "~0.3.17",
+    "async": "~0.1.22"
   }
 }

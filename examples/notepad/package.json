@@ -1,0 +1,17 @@
+{
+  "name": "notepad",
+  "version": "0.0.1",
+  "private": true,
+  "author": "Aleksey Kulikov",
+  "license": "MIT",
+  "readmeFilename": "README.md",
+  "scripts": {
+    "start": "node app"
+  },
+  "dependencies": {
+    "express": "3.0.6",
+    "ejs": "*",
+    "mongoose": "~3.5.4",
+    "mongoose-types": "~1.0.3"
+  }
+}
