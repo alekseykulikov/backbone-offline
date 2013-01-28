@@ -16,6 +16,8 @@ exports.create = function(req, res){
 };
 
 exports.update = function(req, res){
+  if (!req.note) return error.notFound(null, res);
+
   req.note.set(req.body);
   req.note.save(function(err) {
     if (err) return error.unprocEntity(err, res);
@@ -24,16 +26,17 @@ exports.update = function(req, res){
 };
 
 exports.destroy = function(req, res){
+  if (!req.note) return error.notFound(null, res);
+
   req.note.remove(function(err) {
-    if (err) return error.unprocEntity(err, res);
+    if (err) return error.internalError(err, res);
     res.json(204);
   });
 };
 
-exports.load = function(req, id, next) {
+exports.load = function(id, next) {
   Note.findById(id, function(err, note) {
-    if (err) return error.notFound(err, res);
-    req.note = note;
-    next();
+    if (err) return next(err);
+    next(null, note);
   });
 };

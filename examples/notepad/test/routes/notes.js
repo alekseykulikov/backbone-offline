@@ -12,7 +12,7 @@ describe('Notes api', function() {
   var notebook = null;
 
   beforeEach(function(done) {
-    notebook = Notebook({ name: 'Test' });
+    notebook = Notebook({ _id: new ObjectId(), name: 'Test' });
     notebook.save(done);
   });
 
@@ -30,7 +30,6 @@ describe('Notes api', function() {
         .get('/api/notes')
         .expect(200)
         .end(function(err, res){
-          if (err) return done(err);
           expect(res.body).length(3);
           done();
         });
@@ -41,10 +40,9 @@ describe('Notes api', function() {
     it('creates new note with valid params', function(done) {
       request(app)
         .post('/api/notes')
-        .send({ body: 'New note', notebookId: notebook.id})
+        .send({ body: 'New note', notebookId: notebook.id })
         .expect(201)
         .end(function(err, res){
-          if (err) return done(err);
           Note.count(function(err, count) {
             expect(count).equal(1);
             done();
@@ -55,7 +53,7 @@ describe('Notes api', function() {
     it('returns 422 for invalid params', function(done) {
       request(app)
         .post('/api/notes')
-        .send({ body: '', notebookId: notebook.id})
+        .send({ body: '', notebookId: notebook.id })
         .expect(422)
         .end(done);
     });
@@ -65,13 +63,64 @@ describe('Notes api', function() {
     var note = null;
 
     beforeEach(function(done) {
-      note = Note({ body: 'My note', notebookId: notebook });
+      note = Note({ _id: new ObjectId(), body: 'My note', notebookId: notebook });
       note.save(done);
     });
 
-    it('description', function(done) {
-      // body...
-      done();
+    it('updates selected note', function(done) {
+      request(app)
+        .put('/api/notes/' + note.id)
+        .send({ body: 'Updated note' })
+        .expect(204)
+        .end(function(err, res){
+          Note.findById(note, function(err, updatedNote) {
+            expect(updatedNote.body).equal('Updated note');
+            done();
+          });
+        });
+    });
+
+    it('returns 404 when note is not found', function(done) {
+      request(app)
+        .put('/api/notes/' + new ObjectId())
+        .expect(404)
+        .end(done);
+    });
+
+    it('returns 422 when params are not valid', function(done) {
+      request(app)
+        .put('/api/notes/' + note.id)
+        .send({ body: 'Updated note', notebookId: '' })
+        .expect(422)
+        .end(done);
+    });
+  });
+
+  describe('DELETE /api/notes/:noteId', function() {
+    var note = null;
+
+    beforeEach(function(done) {
+      note = Note({ _id: new ObjectId(), body: 'My note', notebookId: notebook });
+      note.save(done);
+    });
+
+    it('updates selected note', function(done) {
+      request(app)
+        .del('/api/notes/' + note.id)
+        .expect(204)
+        .end(function(err, res){
+          Note.count(function(err, count) {
+            expect(count).equal(0);
+            done();
+          });
+        });
+    });
+
+    it('returns 404 when note is not found', function(done) {
+      request(app)
+        .del('/api/notes/' + new ObjectId())
+        .expect(404)
+        .end(done);
     });
   });
 });

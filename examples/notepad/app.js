@@ -27,9 +27,9 @@ app.configure(function(){
   app.use(express.errorHandler());
 });
 
-app.resource('api/notes', notes, { load: notes.load });
-app.resource('api/notebooks', notebooks);
-app.resource('api/tags', tags);
+app.resource('api/notes',     notes,     { load: notes.load });
+app.resource('api/notebooks', notebooks, { load: notebooks.load });
+app.resource('api/tags',      tags,      { load: tags.load });
 
 app.listen(app.get('port'), function(){
   console.log('Server listening on port %d in %s mode', app.get('port'), app.get('env'));
