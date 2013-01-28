@@ -1,15 +1,10 @@
+var express  = require('express')
+  , mongoose = require('mongoose')
+  , config   = { development: 'notepad_development', test: 'notepad_test' };
 
-/**
- * Module dependencies.
- */
-
-var express = require('express')
-  , routes = require('./routes')
-  , user = require('./routes/user')
-  , http = require('http')
-  , path = require('path');
-
-var app = express();
+var app = module.exports = express();
+var uri = 'mongodb://localhost/' + config[app.get('env')];
+mongoose.connect(uri);
 
 app.configure(function(){
   app.set('port', process.env.PORT || 3000);
@@ -20,15 +15,13 @@ app.configure(function(){
   app.use(express.bodyParser());
   app.use(express.methodOverride());
   app.use(app.router);
-  app.use(express['static'](path.join(__dirname, 'public')));
+  app.use(express['static'](__dirname + '/public'));
 });
 
 app.configure('development', function(){
   app.use(express.errorHandler());
 });
 
-app.get('/users', user.list);
-
-http.createServer(app).listen(app.get('port'), function(){
-  console.log("Express server listening on port " + app.get('port'));
+app.listen(app.get('port'), function(){
+  console.log('Server listening on port %d in %s mode', app.get('port'), app.get('env'));
 });

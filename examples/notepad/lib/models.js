@@ -10,11 +10,11 @@ var NoteSchema = new Schema({
 });
 
 var NotebookSchema = new Schema({
-  name: { type: String, required: true }
+    name: { type: String, required: true }
 });
 
 var TagSchema = new Schema({
-  name: { type: String, required: true }
+    name: { type: String, required: true }
 });
 
 NoteSchema.plugin(timestamps);
