@@ -1,12 +1,12 @@
 var mongoose   = require('mongoose')
   , Schema     = mongoose.Schema
   , ObjectId   = Schema.ObjectId
-  , timestamps = require('mongoose-types').useTimestamps;
+  , timestamps = require('mongoose-timestamp');
 
 var NoteSchema = new Schema({
-    body:     { type: String, required: true }
-  , notebook: { type: ObjectId, ref: 'Notebook', required: true }
-  , tags:     [ { type: ObjectId, ref: 'Tag' } ]
+    body:       { type: String, required: true }
+  , notebookId: { type: ObjectId, ref: 'Notebook', required: true }
+  , tags:       [ { type: ObjectId, ref: 'Tag' } ]
 });
 
 var NotebookSchema = new Schema({

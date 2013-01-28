@@ -9,12 +9,17 @@
     "start": "./node_modules/nodemon/nodemon.js --watch app.js --watch lib app.js"
   },
   "dependencies": {
-    "express": "3.0.6",
-    "ejs": "*",
+    "express": "~3.1.0",
+    "ejs": "~0.8.3",
     "mongoose": "~3.5.4",
-    "mongoose-types": "~1.0.3"
+    "express-resource": "~1.0.0",
+    "mongoose-timestamp": "~0.1.0"
   },
   "devDependencies": {
-    "nodemon": "~0.7.1"
+    "nodemon": "~0.7.1",
+    "supertest": "~0.5.1",
+    "chai": "~1.4.2",
+    "mocha": "~1.8.1",
+    "async": "~0.1.22"
   }
 }
