@@ -11,5 +11,5 @@ module.exports = function(grunt) {
     }
   });
 
-  grunt.registerTask('default', 'lint min');
+  grunt.registerTask('build', 'lint min');
 };
