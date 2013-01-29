@@ -9,10 +9,10 @@ var async    = require('async')
   , app      = require('../../app');
 
 describe('Notes api', function() {
-  var notebook = null;
+  var notebook;
 
   beforeEach(function(done) {
-    notebook = Notebook({ _id: new ObjectId(), name: 'Test' });
+    notebook = Notebook({ name: 'Test' });
     notebook.save(done);
   });
 
@@ -60,10 +60,10 @@ describe('Notes api', function() {
   });
 
   describe('PUT /api/notes/:noteId', function() {
-    var note = null;
+    var note;
 
     beforeEach(function(done) {
-      note = Note({ _id: new ObjectId(), body: 'My note', notebookId: notebook });
+      note = Note({ body: 'My note', notebookId: notebook });
       note.save(done);
     });
 
@@ -97,10 +97,10 @@ describe('Notes api', function() {
   });
 
   describe('DELETE /api/notes/:noteId', function() {
-    var note = null;
+    var note;
 
     beforeEach(function(done) {
-      note = Note({ _id: new ObjectId(), body: 'My note', notebookId: notebook });
+      note = Note({ body: 'My note', notebookId: notebook });
       note.save(done);
     });
 

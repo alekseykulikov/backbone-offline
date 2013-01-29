@@ -14,17 +14,14 @@
     }
   });
 
-  // Note contains body, tags, createdAt
   var Notes = Collection.extend({
     url: 'api/notes'
   });
 
-  // Notebook contains notes
   var Notebooks = Collection.extend({
     url: 'api/notebooks'
   });
 
-  // Tags are shared between different notebooks
   var Tags = Collection.extend({
     url: 'api/tags'
   });
@@ -38,7 +35,6 @@
   }
 
   var notesTemplate     = getTemplate('notes_template')
-    , tagsTemplate      = getTemplate('tags_template')
     , tableTemplate     = getTemplate('table_template')
     , itemTemplate      = getTemplate('item_template');
 
@@ -61,7 +57,7 @@
     },
 
     addAll: function() {
-      var $table = this.$('table');
+      var $table = this.$('table tbody');
       this.collection.forEach(function(notebook, index) {
         $table.append(itemTemplate({
             number : index + 1
@@ -73,8 +69,23 @@
 
   var TagsView = Backbone.View.extend({
     render: function() {
-      this.$el.html(tagsTemplate());
+      this.$el.append(tableTemplate({
+          caption : 'Tags'
+        , title   : 'Name'
+        , name    : 'Tag'
+      }));
+      this.addAll();
       return this;
+    },
+
+    addAll: function() {
+      var $table = this.$('table tbody');
+      this.collection.forEach(function(tag, index) {
+        $table.append(itemTemplate({
+            number : index + 1
+          , value  : tag.get('name')
+        }));
+      });
     }
   });
 

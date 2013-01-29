@@ -1,15 +1,12 @@
 require('express-resource');
+require('./db/connect');
 
 var express   = require('express')
   , notes     = require('./lib/routes/notes')
   , notebooks = require('./lib/routes/notebooks')
-  , tags      = require('./lib/routes/tags')
-  , mongoose  = require('mongoose')
-  , config    = { development: 'notepad_development', test: 'notepad_test' };
+  , tags      = require('./lib/routes/tags');
 
 var app = module.exports = express();
-var uri = 'mongodb://localhost/' + config[app.get('env')];
-mongoose.connect(uri);
 
 app.configure('development', function(){
   app.use(express.logger('dev'));

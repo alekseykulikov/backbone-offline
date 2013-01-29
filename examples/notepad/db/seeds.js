@@ -1,4 +1,4 @@
-require('../app');
+require('./connect');
 
 var Faker       = require('Faker')
   , _           = require('underscore')

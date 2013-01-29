@@ -5,6 +5,8 @@ var async    = require('async')
   , request  = require('supertest')
   , ObjectId = require('mongoose').Types.ObjectId
   , Tag      = require('../../lib/models').Tag
+  , Notebook = require('../../lib/models').Notebook
+  , Note     = require('../../lib/models').Note
   , app      = require('../../app');
 
 describe('Tags api', function() {
@@ -26,6 +28,43 @@ describe('Tags api', function() {
           expect(res.body).length(4);
           done();
         });
+    });
+  });
+
+  describe('GET /api/tags/:tagId', function() {
+    var tag1, tag2, notebook;
+
+    beforeEach(function(done) {
+      notebook = Notebook({ name: 'Notebook 1' });
+      tag1     = Tag({ name: 'Tag 1' });
+      tag2     = Tag({ name: 'Tag 2' });
+
+      async.parallel([
+        function(cb) { tag1.save(cb); },
+        function(cb) { tag2.save(cb); },
+        function(cb) { notebook.save(cb); },
+        function(cb) { Note.create({ body: 'Note 1', notebookId: notebook, tags: [tag1.id, tag2.id] }, cb); },
+        function(cb) { Note.create({ body: 'Note 2', notebookId: notebook, tags: [tag1.id] }, cb); },
+        function(cb) { Note.create({ body: 'Note 3', notebookId: notebook, tags: [tag2.id] }, cb); },
+        function(cb) { Note.create({ body: 'Note 4', notebookId: notebook, tags: [tag1.id] }, cb); }
+      ], done);
+    });
+
+    it('returns list of notes', function(done) {
+      request(app)
+        .get('/api/tags/' + tag1.id)
+        .end(function(err, res){
+          expect(res.status).equal(200);
+          expect(res.body).length(3);
+          done();
+        });
+    });
+
+    it('returns 404 when tag is not found', function(done) {
+      request(app)
+        .get('/api/tags/' + new ObjectId())
+        .expect(404)
+        .end(done);
     });
   });
 
@@ -53,10 +92,10 @@ describe('Tags api', function() {
   });
 
   describe('PUT /api/tags/:tagId', function() {
-    var tag = null;
+    var tag;
 
     beforeEach(function(done) {
-      tag = Tag({ _id: new ObjectId(), name: 'My tag' });
+      tag = Tag({ name: 'My tag' });
       tag.save(done);
     });
 
@@ -90,10 +129,10 @@ describe('Tags api', function() {
   });
 
   describe('DELETE /api/tags/:tagId', function() {
-    var tag = null;
+    var tag;
 
     beforeEach(function(done) {
-      tag = Tag({ _id: new ObjectId(), name: 'My tag' });
+      tag = Tag({ name: 'My tag' });
       tag.save(done);
     });
 

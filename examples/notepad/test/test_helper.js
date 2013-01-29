@@ -1,6 +1,8 @@
 process.env.NODE_ENV = 'test';
 process.env.PORT     = '3001';
 
+require('../db/connect');
+
 var async    = require('async')
   , Note     = require('../lib/models').Note
   , Notebook = require('../lib/models').Notebook

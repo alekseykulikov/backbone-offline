@@ -1,9 +1,18 @@
 var Tag   = require('../models').Tag
+  , Note  = require('../models').Note
   , error = require('./errors');
 
 exports.index = function(req, res){
   Tag.find({}, function(err, tags) {
     return err ? error.internalError(res) : res.json(200, tags);
+  });
+};
+
+exports.show = function(req, res){
+  if (!req.tag) return error.notFound(res);
+
+  Note.find({ tags: req.tag.id }, function(err, notes) {
+    return err ? error.internalError(res) : res.json(200, notes);
   });
 };
 
