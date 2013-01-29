@@ -2,6 +2,27 @@
   color: #f2f2f2;
 }
 
+caption h3 {
+  display: inline-block;
+}
+
+td.right-align {
+  text-align: right;
+}
+
+td.hidden-cell a {
+  visibility: hidden;
+}
+
+table tr:hover td.hidden-cell a {
+  visibility: visible;
+}
+
+caption a {
+  float: left;
+  margin-top: 14px;
+}
+
 @media (min-width: 980px) {
   #application {
     padding-top: 60px;

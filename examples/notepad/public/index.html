@@ -20,7 +20,7 @@
           <a class="brand" href="#">My notes</a>
           <div class="nav-collapse collapse">
             <ul class="nav" id="nav">
-              <li><a href="#notes">Home</a></li>
+              <li><a href="#notes/all">Notes</a></li>
               <li><a href="#notebooks">Notebooks</a></li>
               <li><a href="#tags">Tags</a></li>
             </ul>
@@ -33,15 +33,40 @@
     </div> <!-- /container -->
 
     <script type="application/template" id="notes_template">
-      <h1>Notes</h1>
-    </script>
-
-    <script type="application/template" id="notebooks_template">
-      <h1>Notebooks</h1>
+      <h2>Notes</h2>
     </script>
 
     <script type="application/template" id="tags_template">
-      <h1>Tags</h1>
+      <h2>Tags</h2>
+    </script>
+
+    <script type="application/template" id="table_template">
+      <table class="table table-hover">
+        <caption>
+          <h3><%= caption %></h3>
+          <a class="btn btn-small add" href="javascript:;"><i class="icon-plus"></i> New <%= name %></a>
+        </caption>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th><%= title %></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </script>
+
+    <script type="application/template" id="item_template">
+      <tr>
+        <td><%= number %></td>
+        <td><%= value %></td>
+        <td class="right-align hidden-cell">
+          <a class="btn btn-mini edit" href="javascript:;"><i class="icon-edit"></i> Edit</a>
+          <a class="btn btn-mini remove" href="javascript:;"><i class="icon-remove"></i> Remove</a>
+        </td>
+      </tr>
     </script>
 
     <script type="text/javascript" src="/javascripts/vendor/jquery.js"></script>
