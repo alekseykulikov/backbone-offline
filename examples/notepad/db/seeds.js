@@ -24,7 +24,7 @@ var tasks = [
  * Create tasks for notebooks
  */
 
-_.times(5, function() {
+_.times(3, function() {
   var notebookId = new ObjectId();
 
   notebookIds.push(notebookId);
@@ -40,7 +40,7 @@ _.times(5, function() {
  * Create tasks for tags
  */
 
-_.times(15, function() {
+_.times(10, function() {
   var tagId = new ObjectId();
 
   tagIds.push(tagId);

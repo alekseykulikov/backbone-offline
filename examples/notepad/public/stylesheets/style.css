@@ -1,3 +1,7 @@
+#application {
+  padding-top: 60px;
+}
+
 .nav-collapse .nav > li > a:hover, .nav-collapse .nav > li.active > a {
   color: #f2f2f2;
 }
@@ -10,21 +14,28 @@ td.right-align {
   text-align: right;
 }
 
-td.hidden-cell a {
-  visibility: hidden;
+.menu-wrapper {
+  float: right;
+  min-width: 20%;
 }
 
-table tr:hover td.hidden-cell a {
-  visibility: visible;
+.hidden-cell {
+  display: none;
+  position: absolute;
+}
+
+table tr:hover .hidden-cell {
+  display: inline-block;
+}
+
+.sidebar-wrapper {
+  position: fixed;
+  top: 43px;
+  bottom: 0;
+  overflow-y: scroll;
 }
 
 caption a {
   float: left;
   margin-top: 14px;
-}
-
-@media (min-width: 980px) {
-  #application {
-    padding-top: 60px;
-  }
 }
