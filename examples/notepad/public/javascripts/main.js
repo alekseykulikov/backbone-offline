@@ -5,25 +5,27 @@
    * Models
    */
 
-  Backbone.Collection.prototype.findAll = function(cb) {
-    this.fetch({
-      success: function(collection, response, options) { cb(null, collection); },
-      error:   function(collection, xhr, options)      { cb(xhr, collection);  }
-    });
-  };
+  var Collection = Backbone.Collection.extend({
+    findAll: function(cb) {
+      this.fetch({
+        success: function(collection, response, options) { cb(null, collection); },
+        error:   function(collection, xhr, options)      { cb(xhr, collection);  }
+      });
+    }
+  });
 
   // Note contains body, tags, createdAt
-  var Notes = Backbone.Collection.extend({
+  var Notes = Collection.extend({
     url: 'api/notes'
   });
 
   // Notebook contains notes
-  var Notebooks = Backbone.Collection.extend({
+  var Notebooks = Collection.extend({
     url: 'api/notebooks'
   });
 
   // Tags are shared between different notebooks
-  var Tags = Backbone.Collection.extend({
+  var Tags = Collection.extend({
     url: 'api/tags'
   });
 
@@ -49,7 +51,11 @@
 
   var NotebooksView = Backbone.View.extend({
     render: function() {
-      this.$el.append(tableTemplate({ caption: 'Notebooks', title: 'Name', name: 'Notebook' }));
+      this.$el.append(tableTemplate({
+          caption : 'Notebooks'
+        , title   : 'Name'
+        , name    : 'Notebook'
+      }));
       this.addAll();
       return this;
     },
@@ -58,8 +64,8 @@
       var $table = this.$('table');
       this.collection.forEach(function(notebook, index) {
         $table.append(itemTemplate({
-            number: index + 1
-          , value: notebook.get('name')
+            number : index + 1
+          , value  : notebook.get('name')
         }));
       });
     }

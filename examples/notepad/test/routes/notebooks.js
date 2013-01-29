@@ -1,5 +1,3 @@
-require('../test_helper');
-
 var async    = require('async')
   , expect   = require('chai').expect
   , request  = require('supertest')
@@ -7,6 +5,8 @@ var async    = require('async')
   , Notebook = require('../../lib/models').Notebook
   , Note     = require('../../lib/models').Note
   , app      = require('../../app');
+
+require('../test_helper');
 
 describe('Notebooks api', function() {
   describe('GET /api/notebooks', function() {
