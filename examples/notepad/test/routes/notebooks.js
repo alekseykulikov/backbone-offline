@@ -48,8 +48,8 @@ describe('Notebooks api', function() {
     it('returns list of notes', function(done) {
       request(app)
         .get('/api/notebooks/' + notebook1.id)
-        .expect(200)
         .end(function(err, res){
+          expect(res.status).equal(200);
           expect(res.body).length(3);
           done();
         });
@@ -68,8 +68,8 @@ describe('Notebooks api', function() {
       request(app)
         .post('/api/notebooks')
         .send({ name: 'New notebook' })
-        .expect(201)
         .end(function(err, res){
+          expect(res.status).equal(201);
           Notebook.count(function(err, count) {
             expect(count).equal(1);
             done();
@@ -77,7 +77,7 @@ describe('Notebooks api', function() {
         });
     });
 
-    it('returns 422 for invalid params', function(done) {
+    it('responses 422 for invalid params', function(done) {
       request(app)
         .post('/api/notebooks')
         .send({ name: '' })
@@ -98,8 +98,8 @@ describe('Notebooks api', function() {
       request(app)
         .put('/api/notebooks/' + notebook.id)
         .send({ name: 'Updated notebook' })
-        .expect(204)
         .end(function(err, res){
+          expect(res.status).equal(204);
           Notebook.findById(notebook, function(err, updatedNotebook) {
             expect(updatedNotebook.name).equal('Updated notebook');
             done();
@@ -107,14 +107,14 @@ describe('Notebooks api', function() {
         });
     });
 
-    it('returns 404 when notebook is not found', function(done) {
+    it('responses 404 when notebook is not found', function(done) {
       request(app)
         .put('/api/notebooks/' + new ObjectId())
         .expect(404)
         .end(done);
     });
 
-    it('returns 422 when params are not valid', function(done) {
+    it('responses 422 when params are not valid', function(done) {
       request(app)
         .put('/api/notebooks/' + notebook.id)
         .send({ name: '' })
@@ -134,8 +134,8 @@ describe('Notebooks api', function() {
     it('updates selected notebook', function(done) {
       request(app)
         .del('/api/notebooks/' + notebook.id)
-        .expect(204)
         .end(function(err, res){
+          expect(res.status).equal(204);
           Notebook.count(function(err, count) {
             expect(count).equal(0);
             done();
@@ -143,7 +143,7 @@ describe('Notebooks api', function() {
         });
     });
 
-    it('returns 404 when notebook is not found', function(done) {
+    it('responses 404 when notebook is not found', function(done) {
       request(app)
         .del('/api/notebooks/' + new ObjectId())
         .expect(404)

@@ -21,8 +21,8 @@ describe('Tags api', function() {
     it('returns all tags', function(done) {
       request(app)
         .get('/api/tags')
-        .expect(200)
         .end(function(err, res){
+          expect(res.status).equal(200);
           expect(res.body).length(4);
           done();
         });
@@ -34,8 +34,8 @@ describe('Tags api', function() {
       request(app)
         .post('/api/tags')
         .send({ name: 'New tag' })
-        .expect(201)
         .end(function(err, res){
+          expect(res.status).equal(201);
           Tag.count(function(err, count) {
             expect(count).equal(1);
             done();
@@ -64,8 +64,8 @@ describe('Tags api', function() {
       request(app)
         .put('/api/tags/' + tag.id)
         .send({ name: 'Updated tag' })
-        .expect(204)
         .end(function(err, res){
+          expect(res.status).equal(204);
           Tag.findById(tag, function(err, updatedTag) {
             expect(updatedTag.name).equal('Updated tag');
             done();
@@ -100,8 +100,8 @@ describe('Tags api', function() {
     it('updates selected tag', function(done) {
       request(app)
         .del('/api/tags/' + tag.id)
-        .expect(204)
         .end(function(err, res){
+          expect(res.status).equal(204);
           Tag.count(function(err, count) {
             expect(count).equal(0);
             done();

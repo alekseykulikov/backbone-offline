@@ -28,8 +28,8 @@ describe('Notes api', function() {
     it('returns all notes', function(done) {
       request(app)
         .get('/api/notes')
-        .expect(200)
         .end(function(err, res){
+          expect(res.status).equal(200);
           expect(res.body).length(3);
           done();
         });
@@ -41,8 +41,8 @@ describe('Notes api', function() {
       request(app)
         .post('/api/notes')
         .send({ body: 'New note', notebookId: notebook.id })
-        .expect(201)
         .end(function(err, res){
+          expect(res.status).equal(201);
           Note.count(function(err, count) {
             expect(count).equal(1);
             done();
@@ -71,8 +71,8 @@ describe('Notes api', function() {
       request(app)
         .put('/api/notes/' + note.id)
         .send({ body: 'Updated note' })
-        .expect(204)
         .end(function(err, res){
+          expect(res.status).equal(204);
           Note.findById(note, function(err, updatedNote) {
             expect(updatedNote.body).equal('Updated note');
             done();
@@ -107,8 +107,8 @@ describe('Notes api', function() {
     it('updates selected note', function(done) {
       request(app)
         .del('/api/notes/' + note.id)
-        .expect(204)
         .end(function(err, res){
+          expect(res.status).equal(204);
           Note.count(function(err, count) {
             expect(count).equal(0);
             done();

@@ -1,11 +1,11 @@
-exports.internalError = function(err, res) {
+exports.internalError = function(res) {
   res.json(500, { error: 'Internal Server Error' });
 };
 
-exports.unprocEntity = function(err, res) {
+exports.unprocEntity = function(res, err) {
   res.json(422, { error: err });
 };
 
-exports.notFound = function(err, res) {
+exports.notFound = function(res) {
   res.json(404, { error: 'Not Found' });
 };
