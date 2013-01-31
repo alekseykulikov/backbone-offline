@@ -29,5 +29,5 @@ app.resource('api/notebooks', notebooks, { load: notebooks.load });
 app.resource('api/tags',      tags,      { load: tags.load });
 
 app.listen(app.get('port'), function(){
-  console.log('Server listening on port %d in %s mode', app.get('port'), app.get('env'));
+  console.log('Notepad server listening on port %d in %s mode', app.get('port'), app.get('env'));
 });

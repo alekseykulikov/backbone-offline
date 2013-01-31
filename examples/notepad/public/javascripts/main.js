@@ -85,19 +85,21 @@
     },
 
     renderMenu: function() {
-      this.$('.sidebar-wrapper').append(menuTemplate());
-      var $ul = this.$('ul:last');
+      var $ul = this.addMenuGroup();
       $ul.append(menuItemTemplate({ href: 'all', title: 'All Notes' }));
       this.notebooks.forEach(function(notebook) {
         $ul.append(menuItemTemplate({ href: notebook.id, title: notebook.get('name') }));
       });
 
-      this.$('.sidebar-wrapper').append(menuTemplate());
-      $ul = this.$('ul:last');
-
+      $ul = this.addMenuGroup();
       this.tags.forEach(function(tag) {
         $ul.append(menuItemTemplate({ href: tag.id, title: '#' + tag.get('name') }));
       });
+    },
+
+    addMenuGroup: function() {
+      this.$('.sidebar-wrapper').append(menuTemplate());
+      return this.$('ul:last');
     },
 
     setActive: function() {

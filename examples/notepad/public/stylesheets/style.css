@@ -16,7 +16,7 @@ td.right-align {
 
 .menu-wrapper {
   float: right;
-  min-width: 20%;
+  min-width: 125px;
 }
 
 .hidden-cell {
@@ -32,7 +32,6 @@ table tr:hover .hidden-cell {
   position: fixed;
   top: 43px;
   bottom: 0;
-  overflow-y: scroll;
 }
 
 caption a {
