@@ -1,44 +1,26 @@
 var Notebook = require('../models').Notebook
   , Note     = require('../models').Note
-  , error    = require('./errors');
+  , helper   = require('./shared/json_helpers');
 
 exports.index = function(req, res){
-  Notebook.find({}, function(err, notebooks) {
-    return err ? error.internalError(res) : res.json(200, notebooks);
-  });
+  Notebook.find({}, helper.ok(res));
 };
 
 exports.create = function(req, res){
-  Notebook.create(req.body, function(err, notebook) {
-    return err ? error.unprocEntity(res, err) : res.json(201, notebook);
-  });
+  Notebook.create(req.body, helper.created(res));
 };
 
 exports.show = function(req, res){
-  if (!req.notebook) return error.notFound(res);
-
-  Note.find({ notebookId: req.notebook.id }, function(err, notes) {
-    return err ? error.internalError(res) : res.json(200, notes);
-  });
+  Note.find({ notebookId: req.notebook.id }, helper.ok(res));
 };
 
 exports.update = function(req, res){
-  if (!req.notebook) return error.notFound(res);
-
   req.notebook.set(req.body);
-  req.notebook.save(function(err) {
-    return err ? error.unprocEntity(res, err) : res.send(204);
-  });
+  req.notebook.save(helper.noContent(res));
 };
 
 exports.destroy = function(req, res){
-  if (!req.notebook) return error.notFound(res);
-
-  req.notebook.remove(function(err) {
-    return err ? error.internalError(res) : res.send(204);
-  });
+  req.notebook.remove(helper.noContent(res));
 };
 
-exports.load = function(id, next) {
-  Notebook.findById(id, next);
-};
+exports.load = helper.load(Notebook);

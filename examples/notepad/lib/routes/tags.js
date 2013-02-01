@@ -1,44 +1,26 @@
-var Tag   = require('../models').Tag
-  , Note  = require('../models').Note
-  , error = require('./errors');
+var Tag    = require('../models').Tag
+  , Note   = require('../models').Note
+  , helper = require('./shared/json_helpers');
 
 exports.index = function(req, res){
-  Tag.find({}, function(err, tags) {
-    return err ? error.internalError(res) : res.json(200, tags);
-  });
-};
-
-exports.show = function(req, res){
-  if (!req.tag) return error.notFound(res);
-
-  Note.find({ tags: req.tag.id }, function(err, notes) {
-    return err ? error.internalError(res) : res.json(200, notes);
-  });
+  Tag.find({}, helper.ok(res));
 };
 
 exports.create = function(req, res){
-  Tag.create(req.body, function(err, tag) {
-    return err ? error.unprocEntity(res, err) : res.json(201, tag);
-  });
+  Tag.create(req.body, helper.created(res));
+};
+
+exports.show = function(req, res){
+  Note.find({ tags: req.tag.id }, helper.ok(res));
 };
 
 exports.update = function(req, res){
-  if (!req.tag) return error.notFound(res);
-
   req.tag.set(req.body);
-  req.tag.save(function(err) {
-    return err ? error.unprocEntity(res, err) : res.send(204);
-  });
+  req.tag.save(helper.noContent(res));
 };
 
 exports.destroy = function(req, res){
-  if (!req.tag) return error.notFound(res);
-
-  req.tag.remove(function(err) {
-    return err ? error.internalError(res) : res.send(204);
-  });
+  req.tag.remove(helper.noContent(res));
 };
 
-exports.load = function(id, next) {
-  Tag.findById(id, next);
-};
+exports.load = helper.load(Tag);

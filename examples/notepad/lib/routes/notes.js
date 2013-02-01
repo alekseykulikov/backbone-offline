@@ -1,35 +1,21 @@
-var Note  = require('../models').Note
-  , error = require('./errors');
+var Note   = require('../models').Note
+  , helper = require('./shared/json_helpers');
 
 exports.index = function(req, res){
-  Note.find({}, function(err, notes) {
-    return err ? error.internalError(res) : res.json(200, notes);
-  });
+  Note.find({}, helper.ok(res));
 };
 
 exports.create = function(req, res){
-  Note.create(req.body, function(err, note) {
-    return err ? error.unprocEntity(res, err) : res.json(201, note);
-  });
+  Note.create(req.body, helper.created(res));
 };
 
 exports.update = function(req, res){
-  if (!req.note) return error.notFound(res);
-
   req.note.set(req.body);
-  req.note.save(function(err) {
-    return err ? error.unprocEntity(res, err) : res.send(204);
-  });
+  req.note.save(helper.noContent(res));
 };
 
 exports.destroy = function(req, res){
-  if (!req.note) return error.notFound(res);
-
-  req.note.remove(function(err) {
-    return err ? error.internalError(res) : res.send(204);
-  });
+  req.note.remove(helper.noContent(res));
 };
 
-exports.load = function(id, next) {
-  Note.findById(id, next);
-};
+exports.load = helper.load(Note);
