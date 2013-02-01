@@ -40,7 +40,7 @@ describe('Notes api', function() {
     it('creates new note with valid params', function(done) {
       request(app)
         .post('/api/notes')
-        .send({ body: 'New note', notebookId: notebook.id })
+        .send({ name: 'New note', notebookId: notebook.id })
         .end(function(err, res){
           expect(res.status).equal(201);
           Note.count(function(err, count) {
@@ -53,7 +53,7 @@ describe('Notes api', function() {
     it('returns 422 for invalid params', function(done) {
       request(app)
         .post('/api/notes')
-        .send({ body: '', notebookId: notebook.id })
+        .send({ name: '', notebookId: notebook.id })
         .expect(422)
         .end(done);
     });
@@ -63,18 +63,18 @@ describe('Notes api', function() {
     var note;
 
     beforeEach(function(done) {
-      note = Note({ body: 'My note', notebookId: notebook });
+      note = Note({ name: 'My note', notebookId: notebook });
       note.save(done);
     });
 
     it('updates selected note', function(done) {
       request(app)
         .put('/api/notes/' + note.id)
-        .send({ body: 'Updated note' })
+        .send({ name: 'Updated note' })
         .end(function(err, res){
           expect(res.status).equal(204);
           Note.findById(note, function(err, updatedNote) {
-            expect(updatedNote.body).equal('Updated note');
+            expect(updatedNote.name).equal('Updated note');
             done();
           });
         });
@@ -90,7 +90,7 @@ describe('Notes api', function() {
     it('returns 422 when params are not valid', function(done) {
       request(app)
         .put('/api/notes/' + note.id)
-        .send({ body: 'Updated note', notebookId: '' })
+        .send({ name: 'Updated note', notebookId: '' })
         .expect(422)
         .end(done);
     });
@@ -100,7 +100,7 @@ describe('Notes api', function() {
     var note;
 
     beforeEach(function(done) {
-      note = Note({ body: 'My note', notebookId: notebook });
+      note = Note({ name: 'My note', notebookId: notebook });
       note.save(done);
     });
 

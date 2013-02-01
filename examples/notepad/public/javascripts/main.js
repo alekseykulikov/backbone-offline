@@ -5,11 +5,32 @@
    * Models
    */
 
-  var Model      = Backbone.Model.extend({ idAttribute: '_id' })
-    , Collection = Backbone.Collection.extend({ model: Model })
-    , Notes      = Collection.extend({ url: 'api/notes' })
-    , Notebooks  = Collection.extend({ url: 'api/notebooks' })
-    , Tags       = Collection.extend({ url: 'api/tags' });
+  var Model = Backbone.Model.extend({
+    idAttribute: '_id'
+  });
+
+  var Notes = Backbone.Collection.extend({
+    model: Model,
+    url: 'api/notes'
+  });
+
+  var Notebooks = Backbone.Collection.extend({
+    model: Model,
+    url: 'api/notebooks',
+
+    comparator: function(notebook) {
+      return notebook.get('name');
+    }
+  });
+
+  var Tags = Backbone.Collection.extend({
+    model: Model,
+    url: 'api/tags',
+
+    comparator: function(tag) {
+      return tag.get('name');
+    }
+  });
 
   /**
    * Helpers

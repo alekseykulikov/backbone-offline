@@ -18,11 +18,11 @@ describe('Synchronization on start of application', function() {
       function(cb) { tag1.save(cb); },
       function(cb) { tag2.save(cb); },
       function(cb) { tag3.save(cb); },
-      function(cb) { Note.create({ body: 'Note 1', notebookId: notebook1, tags: [tag1] }, cb); },
-      function(cb) { Note.create({ body: 'Note 2', notebookId: notebook1, tags: [tag1, tag2] }, cb); },
-      function(cb) { Note.create({ body: 'Note 3', notebookId: notebook2, tags: [tag3] }, cb); },
-      function(cb) { Note.create({ body: 'Note 4', notebookId: notebook1, tags: [tag2] }, cb); },
-      function(cb) { Note.create({ body: 'Note 5', notebookId: notebook2, tags: [tag1, tag2, tag3] }, cb); }
+      function(cb) { Note.create({ name: 'Note 1', notebookId: notebook1, tags: [tag1] }, cb); },
+      function(cb) { Note.create({ name: 'Note 2', notebookId: notebook1, tags: [tag1, tag2] }, cb); },
+      function(cb) { Note.create({ name: 'Note 3', notebookId: notebook2, tags: [tag3] }, cb); },
+      function(cb) { Note.create({ name: 'Note 4', notebookId: notebook1, tags: [tag2] }, cb); },
+      function(cb) { Note.create({ name: 'Note 5', notebookId: notebook2, tags: [tag1, tag2, tag3] }, cb); }
     ], done);
   });
 
