@@ -38,10 +38,10 @@ describe('Notebooks api', function() {
       async.parallel([
         function(cb) { notebook1.save(cb); },
         function(cb) { notebook2.save(cb); },
-        function(cb) { Note.create({ body: 'Note 1', notebookId: notebook1 }, cb); },
-        function(cb) { Note.create({ body: 'Note 2', notebookId: notebook1 }, cb); },
-        function(cb) { Note.create({ body: 'Note 3', notebookId: notebook1 }, cb); },
-        function(cb) { Note.create({ body: 'Other',  notebookId: notebook2 }, cb); }
+        function(cb) { Note.create({ name: 'Note 1', notebookId: notebook1 }, cb); },
+        function(cb) { Note.create({ name: 'Note 2', notebookId: notebook1 }, cb); },
+        function(cb) { Note.create({ name: 'Note 3', notebookId: notebook1 }, cb); },
+        function(cb) { Note.create({ name: 'Other',  notebookId: notebook2 }, cb); }
       ], done);
     });
 

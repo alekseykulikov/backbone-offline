@@ -66,7 +66,7 @@ _.times(75, function() {
 
   tasks.push(function (cb){
     Note.create({
-        body: capitalize(Faker.Lorem.sentences(_.random(1, 10)))
+        name: capitalize(Faker.Lorem.sentences(_.random(1, 10)))
       , notebookId: notebookId
       , tags: _.uniq(tags)
     }, cb);

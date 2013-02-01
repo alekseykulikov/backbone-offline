@@ -43,10 +43,10 @@ describe('Tags api', function() {
         function(cb) { tag1.save(cb); },
         function(cb) { tag2.save(cb); },
         function(cb) { notebook.save(cb); },
-        function(cb) { Note.create({ body: 'Note 1', notebookId: notebook, tags: [tag1.id, tag2.id] }, cb); },
-        function(cb) { Note.create({ body: 'Note 2', notebookId: notebook, tags: [tag1.id] }, cb); },
-        function(cb) { Note.create({ body: 'Note 3', notebookId: notebook, tags: [tag2.id] }, cb); },
-        function(cb) { Note.create({ body: 'Note 4', notebookId: notebook, tags: [tag1.id] }, cb); }
+        function(cb) { Note.create({ name: 'Note 1', notebookId: notebook, tags: [tag1.id, tag2.id] }, cb); },
+        function(cb) { Note.create({ name: 'Note 2', notebookId: notebook, tags: [tag1.id] }, cb); },
+        function(cb) { Note.create({ name: 'Note 3', notebookId: notebook, tags: [tag2.id] }, cb); },
+        function(cb) { Note.create({ name: 'Note 4', notebookId: notebook, tags: [tag1.id] }, cb); }
       ], done);
     });
 

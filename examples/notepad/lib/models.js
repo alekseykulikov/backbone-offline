@@ -4,22 +4,18 @@ var mongoose   = require('mongoose')
   , timestamps = require('mongoose-timestamp');
 
 var NoteSchema = new Schema({
-    body:       { type: String, required: true }
+    name:       { type: String, required: true }
   , notebookId: { type: ObjectId, ref: 'Notebook', required: true }
   , tags:       [ { type: ObjectId, ref: 'Tag' } ]
-});
+}).plugin(timestamps);
 
 var NotebookSchema = new Schema({
     name: { type: String, required: true }
-});
+}).plugin(timestamps);
 
 var TagSchema = new Schema({
     name: { type: String, required: true }
-});
-
-NoteSchema.plugin(timestamps);
-TagSchema.plugin(timestamps);
-NotebookSchema.plugin(timestamps);
+}).plugin(timestamps);
 
 exports.Note     = mongoose.model('Note', NoteSchema);
 exports.Notebook = mongoose.model('Notebook', NotebookSchema);

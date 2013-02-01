@@ -4,7 +4,7 @@ var async    = require('async')
   , Notebook = require('../functional_helper').Notebook
   , Tag      = require('../functional_helper').Tag;
 
-describe('First sync', function() {
+describe('Synchronization on start of application', function() {
   beforeEach(function(done) {
     var notebook1 = Notebook({ name: 'Notebook 1' })
       , notebook2 = Notebook({ name: 'Notebook 2' })
@@ -26,7 +26,11 @@ describe('First sync', function() {
     ], done);
   });
 
-  it('display raw data', function(done) {
-    casper('display_raw_data', done);
+  it('notepad app works as expect', function(done) {
+    casper('notepad_works', done);
   });
+
+  it('runs full sync and uploads all data to local storage');
+
+  it('runs incremental sync when storage has necessary data');
 });

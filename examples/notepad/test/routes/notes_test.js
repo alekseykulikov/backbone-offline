@@ -19,9 +19,9 @@ describe('Notes api', function() {
   describe('GET /api/notes', function() {
     beforeEach(function(done){
       async.parallel([
-        function(cb) { Note.create({ body: 'Note 1', notebookId: notebook }, cb); },
-        function(cb) { Note.create({ body: 'Note 2', notebookId: notebook }, cb); },
-        function(cb) { Note.create({ body: 'Note 3', notebookId: notebook }, cb); }
+        function(cb) { Note.create({ name: 'Note 1', notebookId: notebook }, cb); },
+        function(cb) { Note.create({ name: 'Note 2', notebookId: notebook }, cb); },
+        function(cb) { Note.create({ name: 'Note 3', notebookId: notebook }, cb); }
       ], done);
     });
 

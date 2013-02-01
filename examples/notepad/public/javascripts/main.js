@@ -5,147 +5,101 @@
    * Models
    */
 
-  var Model = Backbone.Model.extend({
-    idAttribute: '_id',
-    fetchNotes: function(cb) {
-      this.fetch({
-        success: function(model, response, options) { cb(null, new Notes(response)); },
-        error:   function(model, xhr, options)      { cb(xhr, null); }
-      });
-    }
-  });
+  var Model      = Backbone.Model.extend({ idAttribute: '_id' })
+    , Collection = Backbone.Collection.extend({ model: Model })
+    , Notes      = Collection.extend({ url: 'api/notes' })
+    , Notebooks  = Collection.extend({ url: 'api/notebooks' })
+    , Tags       = Collection.extend({ url: 'api/tags' });
 
-  var Collection = Backbone.Collection.extend({
-    model: Model,
-    fetchAll: function(cb) {
-      this.fetch({
-        success: function(collection, response, options) { cb(null, collection); },
-        error:   function(collection, xhr, options)      { cb(xhr, null); }
-      });
-    }
-  });
+  /**
+   * Helpers
+   */
 
-  var Notes = Collection.extend({
-    url: 'api/notes'
-  });
+  function fetchNotes(model, cb) {
+    model.fetch({
+      success: function(model, response, options) { cb(null, new Notes(response)); },
+      error:   function(model, xhr, options)      { cb(xhr, null); }
+    });
+  }
 
-  var Notebooks = Collection.extend({
-    url: 'api/notebooks'
-  });
+  function fetchAll(collection, cb) {
+    collection.fetch({
+      success: function(collection, response, options) { cb(null, collection); },
+      error:   function(collection, xhr, options)      { cb(xhr, null); }
+    });
+  }
 
-  var Tags = Collection.extend({
-    url: 'api/tags'
-  });
+  function getTmpl(name) {
+    return _.template($('#' + name).html());
+  }
+
+  function renderTable(collection, caption) {
+    var tableTmpl = getTmpl('table_template')
+      , itemTmpl  = getTmpl('item_template')
+      , $table    = $($.trim(tableTmpl({ caption : caption })))
+      , $tbody    = $table.find('tbody');
+
+    collection.forEach(function(model, index) {
+      $tbody.append(itemTmpl({
+          number : index + 1
+        , value  : model.get('name')
+      }));
+    });
+
+    return $table;
+  }
 
   /**
    * Views
    */
 
-  function getTemplate(name) {
-    return _.template($('#' + name).html());
-  }
-
-  var notesTemplate     = getTemplate('notes_template')
-    , menuTemplate      = getTemplate('menu_template')
-    , menuItemTemplate  = getTemplate('menu_item_template')
-    , tableTemplate     = getTemplate('table_template')
-    , itemTemplate      = getTemplate('item_template');
-
   var NotesView = Backbone.View.extend({
     initialize: function(options) {
-      this.activeId  = options.activeId;
-      this.notebooks = options.notebooks;
-      this.tags      = options.tags;
+      this.options = options;
     },
 
     render: function() {
-      this.$el.html(notesTemplate());
+      this.$el.html(getTmpl('notes_template')());
+      this.$('.span9').html(renderTable(this.collection, 'Notes'));
       this.renderMenu();
-      this.renderTable();
-      this.setActive();
+
       return this;
     },
 
-    renderTable: function() {
-      this.$('.span9').html(tableTemplate({
-          caption : 'Notes'
-        , name    : 'Note'
-      }));
-      this.addAll();
-    },
-
-    addAll: function() {
-      var $table = this.$('table tbody');
-      this.collection.forEach(function(note, index) {
-        $table.append(itemTemplate({
-            number : index + 1
-          , value  : note.get('body')
-        }));
-      });
-    },
-
     renderMenu: function() {
-      var $ul = this.addMenuGroup();
-      $ul.append(menuItemTemplate({ href: 'all', title: 'All Notes' }));
-      this.notebooks.forEach(function(notebook) {
-        $ul.append(menuItemTemplate({ href: notebook.id, title: notebook.get('name') }));
+      var itemTmpl = getTmpl('menu_item_template')
+        , $ul      = this.addMenuGroup();
+
+      $ul.append(itemTmpl({ href: 'all', title: 'All Notes' }));
+      this.options.notebooks.forEach(function(notebook) {
+        $ul.append(itemTmpl({ href: notebook.id, title: notebook.get('name') }));
       });
 
       $ul = this.addMenuGroup();
-      this.tags.forEach(function(tag) {
-        $ul.append(menuItemTemplate({ href: tag.id, title: '#' + tag.get('name') }));
+      this.options.tags.forEach(function(tag) {
+        $ul.append(itemTmpl({ href: tag.id, title: '#' + tag.get('name') }));
       });
+
+      this.$('.sidebar-wrapper li a[href="#notes/' + this.options.activeId + '"]').parent().addClass('active');
     },
 
     addMenuGroup: function() {
-      this.$('.sidebar-wrapper').append(menuTemplate());
+      this.$('.sidebar-wrapper').append(getTmpl('menu_template')());
       return this.$('ul:last');
-    },
-
-    setActive: function() {
-      this.$('.sidebar-wrapper li a[href="#notes/' + this.activeId + '"]').parent().addClass('active');
     }
   });
 
   var NotebooksView = Backbone.View.extend({
     render: function() {
-      this.$el.append(tableTemplate({
-          caption : 'Notebooks'
-        , name    : 'Notebook'
-      }));
-      this.addAll();
+      this.$el.html(renderTable(this.collection, 'Notebooks'));
       return this;
-    },
-
-    addAll: function() {
-      var $table = this.$('table tbody');
-      this.collection.forEach(function(notebook, index) {
-        $table.append(itemTemplate({
-            number : index + 1
-          , value  : notebook.get('name')
-        }));
-      });
     }
   });
 
   var TagsView = Backbone.View.extend({
     render: function() {
-      this.$el.append(tableTemplate({
-          caption : 'Tags'
-        , name    : 'Tag'
-      }));
-      this.addAll();
+      this.$el.html(renderTable(this.collection, 'Tags'));
       return this;
-    },
-
-    addAll: function() {
-      var $table = this.$('table tbody');
-      this.collection.forEach(function(tag, index) {
-        $table.append(itemTemplate({
-            number : index + 1
-          , value  : tag.get('name')
-        }));
-      });
     }
   });
 
@@ -181,27 +135,27 @@
 
       var prepareData = _.after(2, function() {
         if (id === 'all') {
-          notes.fetchAll(renderNotes);
+          fetchAll(notes, renderNotes);
         } else {
           var item = notebooks.get(id) || tags.get(id);
-          if (!item) return this.navigate('notes/all', { trigger: true });
+          if (!item) return app.navigate('notes/all', { trigger: true });
 
-          item.fetchNotes(renderNotes);
+          fetchNotes(item, renderNotes);
         }
       });
 
-      notebooks.fetchAll(prepareData);
-      tags.fetchAll(prepareData);
+      fetchAll(notebooks, prepareData);
+      fetchAll(tags, prepareData);
     },
 
     notebooks: function() {
-      notebooks.fetchAll(function (err, notebooks) {
+      fetchAll(notebooks, function(err, notebooks) {
         app.renderView('notebooks', NotebooksView, { collection: notebooks });
       });
     },
 
     tags: function() {
-      tags.fetchAll(function (err, tags) {
+      fetchAll(tags, function(err, tags) {
         app.renderView('tags', TagsView, { collection: tags });
       });
     },

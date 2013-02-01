@@ -10,11 +10,11 @@ function prepareData(data) {
 
 exports.casper = function(file, cb) {
   var spawn    = require('child_process').spawn
-    , fileName = 'test/casper_steps/' + file + '.js'
+    , fileName = 'test/casper_scenarios/' + file + '.js'
     , casperjs = spawn('casperjs', ['test', fileName]);
 
   casperjs.stdout.on('data', function (data) {
-    console.log('      ' + prepareData(data));
+    console.log(prepareData(data));
   });
 
   casperjs.stderr.on('data', function (data) {
@@ -22,10 +22,11 @@ exports.casper = function(file, cb) {
   });
 
   casperjs.on('exit', function (code) {
-    expect(code).equal(0, 'Scenario ' + fileName + 'failed');
+    expect(code).equal(0);
     cb();
   });
 
+  // Split scenarios with new line
   console.log('\n');
 };
 
