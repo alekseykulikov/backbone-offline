@@ -6,11 +6,7 @@
 
 do (global = window, _, Backbone) ->
   global.Offline =
-    VERSION: '0.4.2'
-    
-    backboneIsPre_0_9_10: ->
-      backboneVersionNumbers = _.map (Backbone.VERSION.split "."), parseFloat
-      return not (backboneVersionNumbers[0] > 0 or backboneVersionNumbers[1] > 9) and backboneVersionNumbers[2] < 10
+    VERSION: '0.4.3'
 
     # This is a method for CRUD operations with localStorage.
     # Delegates to 'Offline.Storage' and works as ‘Backbone.sync’ alternative
@@ -23,10 +19,7 @@ do (global = window, _, Backbone) ->
         when 'delete' then store.destroy(model, options)
 
       if resp
-        if @backboneIsPre_0_9_10()
-          options.success(resp.attributes ? resp)
-        else
-          options.success(model, resp.attributes ? resp, options)
+        options.success(model, resp.attributes ? resp, options)
       else
         options.error?('Record not found')
 
@@ -221,12 +214,12 @@ do (global = window, _, Backbone) ->
     # 2. load new data
     full: (options = {}) ->
       @ajax 'read', @collection.items, _.extend {}, options,
-        success: (response, status, xhr) =>
+        success: (model, response, opts) =>
           @storage.clear()
           @collection.items.reset([], silent: true)
           @collection.items.create(item, silent: true, local: true, regenerateId: true) for item in response
           @collection.items.trigger('reset') unless options.silent
-          options.success(response) if options.success
+          options.success(model, response, opts) if options.success
 
     # @storage.sync.incremental() - incremental storage synchronization
     # 1. pull() - request data from server
@@ -240,8 +233,8 @@ do (global = window, _, Backbone) ->
       if @storage.getItem('offline')
         @storage.removeItem('offline')
         success = options.success
-        options.success = (response, status, xhr) =>
-          success(response, status, xhr)
+        options.success = (model, response, opts) =>
+          success(model, response, opts)
           @incremental()
 
     # Requests data from the server and merges it with a collection.
@@ -252,10 +245,10 @@ do (global = window, _, Backbone) ->
     # @storage.sync.pull()
     pull: (options = {}) ->
       @ajax 'read', @collection.items, _.extend {}, options,
-        success: (response, status, xhr) =>
+        success: (model, response, opts) =>
           @collection.destroyDiff(response)
           @pullItem(item) for item in response
-          options.success() if options.success
+          options.success(model, response, opts) if options.success
 
     pullItem: (item) ->
       local = @collection.get(item.id)
@@ -293,7 +286,7 @@ do (global = window, _, Backbone) ->
       delete item.attributes.id
       [method, item.id] = if item.get('sid') is 'new' then ['create', null] else ['update', item.attributes.sid]
 
-      @ajax method, item, success: (response, status, xhr) =>
+      @ajax method, item, success: (model, response, opts) =>
         item.set(sid: response.id) if method is 'create'
         item.save {dirty: false}, {local: true}
 
@@ -301,7 +294,7 @@ do (global = window, _, Backbone) ->
 
     flushItem: (sid) ->
       model = @collection.fakeModel(sid)
-      @ajax 'delete', model, success: (response, status, xhr) =>
+      @ajax 'delete', model, success: (model, response, opts) =>
         @storage.destroyIds.remove(sid)
 
   # Manage indexes storing to localStorage.

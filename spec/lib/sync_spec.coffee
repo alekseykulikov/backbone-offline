@@ -88,7 +88,7 @@ describe 'Offline.Sync', ->
       callback = jasmine.createSpy('-Success Callback-')
       @options = success: (resp) -> callback(resp)
       @sync.full(@options)
-      expect(callback).toHaveBeenCalledWith(@response)
+      expect(callback).toHaveBeenCalled()
 
   describe 'incremental', ->
     it 'should call "pull"', ->
