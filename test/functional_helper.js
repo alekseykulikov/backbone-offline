@@ -1,7 +1,8 @@
 require('../examples/notepad/test/test_helper');
 require('../examples/notepad/app');
 
-var expect = require('chai').expect;
+var expect = require('chai').expect
+  , spawn  = require('child_process').spawn;
 
 function prepareData(data) {
   data = data.toString();
@@ -9,8 +10,7 @@ function prepareData(data) {
 }
 
 exports.casper = function(file, cb) {
-  var spawn    = require('child_process').spawn
-    , fileName = 'test/casper_scenarios/' + file + '.js'
+  var fileName = 'test/casper_scenarios/' + file + '.js'
     , casperjs = spawn('casperjs', ['test', fileName]);
 
   casperjs.stdout.on('data', function (data) {

@@ -30,7 +30,9 @@ describe('Synchronization on start of application', function() {
     casper('notepad_works', done);
   });
 
-  it('runs full sync and uploads all data to local storage');
+  it('runs full sync and uploads all data to local storage', function(done) {
+    casper('full_sync', done);
+  });
 
   it('runs incremental sync when storage has necessary data');
 });
