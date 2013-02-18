@@ -70,7 +70,7 @@ The default behavior: synchronization of data with a server occurs on the collec
 * `pull()` - receive data from the server and merge with a current collection
 * `push()` - send dirty-data to the server with an atomic operations create, update, destroy. This ensures the reliability of stored data.
 
-If you don't want to request data from server on fetch you can use option `local: true`:  `dreams.fetch(local: true)`
+If you don't want to request data from server on fetch you can use option `local: true`:  `dreams.fetch({local: true})`
 
 Example: 
 
