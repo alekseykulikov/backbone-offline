@@ -16,6 +16,8 @@ In order to start using `Backbone.offline` you need to add `js/backbone.offline.
 @storage = new Offline.Storage('dreams', this)
 ````
 
+If you prefer amd style, you can use [backbone-offline-requirejs-template](https://github.com/maxfi/backbone-offline-requirejs-template).
+
 Now your collection will save and process data to localStorage. First param is a name of storage, second is a link to collection. This code does not break behavior of other collections. When a collection has no `@storage` attribute, commands will be delegated to `Backbone.sync`. Example of modified collection:
 
 ````
@@ -26,7 +28,6 @@ class Dreams extends Backbone.Collection
       @storage = new Offline.Storage('dreams', this)
   # your code ...
 ````
-If you prefer amd style, you can use [backbone-offline-requirejs-template](https://github.com/maxfi/backbone-offline-requirejs-template).
 
 In order to work successfully with `Backbone.offline`, your app should follow for 3 simple rules:
 
