@@ -26,6 +26,7 @@ class Dreams extends Backbone.Collection
       @storage = new Offline.Storage('dreams', this)
   # your code ...
 ````
+If you prefer amd style, you can use [backbone-offline-requirejs-template](https://github.com/maxfi/backbone-offline-requirejs-template).
 
 In order to work successfully with `Backbone.offline`, your app should follow for 3 simple rules:
 
