@@ -1,0 +1,16 @@
+{
+  "name": "backbone-offline",
+  "version": "0.4.3",
+  "main": "js/backbone_offline.js",
+  "dependencies": {
+    "jquery": "~1.9.1",
+    "backbone": "~0.9.10",
+    "jasmine": "~1.2.0",
+    "underscore": "~1.4.4"
+  },
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "components"
+  ]
+}
