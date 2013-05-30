@@ -89,6 +89,8 @@ dreams.storage.sync.push() # POST /api/dreams and PUT /api/dreams/:id
 ### How to contribute
 
 * Clone repository from github: `git clone git@github.com:Ask11/backbone.offline.git` and switch to new branch `git checkout -b new-feature`
+* Install [Bower](http://bower.io) if you haven't already, with `npm install -g bower` (you should also have nodejs installed)
+* Run `bower install` to install dependencies
 * Run `cake watch` for auto compilation files of CoffeeScript
 * Make sure that specs are green `open /spec/spec_runner.html` and start development
 * You can suggest a feature or report a bug on [github](https://github.com/Ask11/backbone.offline/issues) 
