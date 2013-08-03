@@ -19,7 +19,7 @@ do (global = window, _, Backbone) ->
         when 'delete' then store.destroy(model, options)
 
       if resp
-        options.success(model, resp.attributes ? resp, options)
+        options.success(resp.attributes ? resp)
       else
         options.error?('Record not found')
 
@@ -127,7 +127,11 @@ do (global = window, _, Backbone) ->
     findAll: (options = {}) ->
       unless options.local
         if @isEmpty() then @sync.full(options) else @sync.incremental(options)
-      JSON.parse(@getItem("#{@name}-#{id}")) for id in @allIds.values
+      
+      items = []
+      items.push JSON.parse(@getItem("#{@name}-#{id}")) for id in @allIds.values
+      
+      return items
 
     s4: ->
       (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1)
@@ -214,7 +218,7 @@ do (global = window, _, Backbone) ->
     # 2. load new data
     full: (options = {}) ->
       @ajax 'read', @collection.items, _.extend {}, options,
-        success: (model, response, opts) =>
+        success: (response, status, xhr) =>
           @storage.clear()
           @collection.items.reset([], silent: true)
           @collection.items.create(item, silent: true, local: true, regenerateId: true) for item in response
