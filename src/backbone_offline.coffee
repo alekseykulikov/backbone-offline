@@ -218,7 +218,7 @@ do (global = window, _, Backbone) ->
     # 2. load new data
     full: (options = {}) ->
       @ajax 'read', @collection.items, _.extend {}, options,
-        success: (model, response, opts) =>
+        success: (response, status, xhr) =>
           @storage.clear()
           @collection.items.reset([], silent: true)
           @collection.items.create(item, silent: true, local: true, regenerateId: true) for item in response
