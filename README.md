@@ -74,7 +74,7 @@ The default behavior: synchronization of data with a server occurs on the collec
 
 If you don't want to request data from server on fetch you can use option `local: true`:  `dreams.fetch({local: true})`
 
-Example: 
+Example:
 
 ````
 dreams = new Dreams() # initialize collection
@@ -93,19 +93,12 @@ dreams.storage.sync.push() # POST /api/dreams and PUT /api/dreams/:id
 * Run `bower install` to install dependencies
 * Run `cake watch` for auto compilation files of CoffeeScript
 * Make sure that specs are green `open /spec/spec_runner.html` and start development
-* You can suggest a feature or report a bug on [github](https://github.com/Ask11/backbone.offline/issues) 
+* You can suggest a feature or report a bug on [github](https://github.com/Ask11/backbone.offline/issues)
 
 ### Examples
 
 * [Saveidea](http://saveideanow.com/demo_app) is a web-app for storing ideas, that appear in your mind during the day. It uses this library to work offline in the browser.
 * [Dreamy](http://dreamyapp.herokuapp.com/) is a super simple web-application which allows to write your dreams ([open source](https://github.com/Ask11/dreamy)).
-
-### Change Log
-
-* 0.3.0: Checkup localStorage quota, fixed bugs with full-sync, added auto runs incremental sync and manual sync on fetch 
-* 0.2.0: Fixed bugs, added `onLine()` method, added `autoPush` option, upgrade to Backbone 0.9.2
-* 0.1.1: First public release. Fixed bugs, added comments and documentation, refactoring
-* 0.1.0: Library was extracted from project http://saveideanow.com
 
 ### Special thanks
 
