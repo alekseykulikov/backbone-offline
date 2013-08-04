@@ -1,12 +1,12 @@
 #    Backbone.offline allows your Backbone.js app to work offline
 #    https://github.com/Ask11/backbone.offline
 #
-#    (c) 2012 - Aleksey Kulikov
+#    (c) 2013 - Aleksey Kulikov
 #    May be freely distributed according to MIT license.
 
 do (global = window, _, Backbone) ->
   global.Offline =
-    VERSION: '0.4.3'
+    VERSION: '0.5.0'
 
     # This is a method for CRUD operations with localStorage.
     # Delegates to 'Offline.Storage' and works as ‘Backbone.sync’ alternative
@@ -19,7 +19,7 @@ do (global = window, _, Backbone) ->
         when 'delete' then store.destroy(model, options)
 
       if resp
-        options.success(resp.attributes ? resp)
+        options.success(resp.attributes ? resp, options)
       else
         options.error?('Record not found')
 
@@ -127,11 +127,8 @@ do (global = window, _, Backbone) ->
     findAll: (options = {}) ->
       unless options.local
         if @isEmpty() then @sync.full(options) else @sync.incremental(options)
-      
-      items = []
-      items.push JSON.parse(@getItem("#{@name}-#{id}")) for id in @allIds.values
-      
-      return items
+
+      JSON.parse(@getItem("#{@name}-#{id}")) for id in @allIds.values
 
     s4: ->
       (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1)
@@ -148,8 +145,8 @@ do (global = window, _, Backbone) ->
 
     save: (item, options = {}) ->
       if options.regenerateId
-        id = if options.id is 'mid' then @mid() else @guid()
-        item.set(sid: item.attributes?.sid || item.attributes?.id || 'new', id: id)
+        newId = if options.id is 'mid' then @mid() else @guid()
+        item.set({sid: item.attributes?.sid || item.attributes?.id || 'new', id: newId})
       item.set(updated_at: (new Date()).toJSON(), dirty: true) unless options.local
 
       @replaceKeyFields(item, 'local')
@@ -218,12 +215,12 @@ do (global = window, _, Backbone) ->
     # 2. load new data
     full: (options = {}) ->
       @ajax 'read', @collection.items, _.extend {}, options,
-        success: (response, status, xhr) =>
+        success: (models, opts) =>
           @storage.clear()
           @collection.items.reset([], silent: true)
-          @collection.items.create(item, silent: true, local: true, regenerateId: true) for item in response
+          @collection.items.create(item, silent: true, local: true, regenerateId: true) for item in models
           @collection.items.trigger('reset') unless options.silent
-          options.success(model, response, opts) if options.success
+          options.success(models, opts) if options.success
 
     # @storage.sync.incremental() - incremental storage synchronization
     # 1. pull() - request data from server
@@ -237,8 +234,8 @@ do (global = window, _, Backbone) ->
       if @storage.getItem('offline')
         @storage.removeItem('offline')
         success = options.success
-        options.success = (model, response, opts) =>
-          success(model, response, opts)
+        options.success = (model, opts) =>
+          success(model, opts)
           @incremental()
 
     # Requests data from the server and merges it with a collection.
@@ -249,10 +246,10 @@ do (global = window, _, Backbone) ->
     # @storage.sync.pull()
     pull: (options = {}) ->
       @ajax 'read', @collection.items, _.extend {}, options,
-        success: (model, response, opts) =>
-          @collection.destroyDiff(response)
-          @pullItem(item) for item in response
-          options.success(model, response, opts) if options.success
+        success: (models, opts) =>
+          @collection.destroyDiff(models)
+          @pullItem(item) for item in models
+          options.success(models, opts) if options.success
 
     pullItem: (item) ->
       local = @collection.get(item.id)
@@ -290,15 +287,15 @@ do (global = window, _, Backbone) ->
       delete item.attributes.id
       [method, item.id] = if item.get('sid') is 'new' then ['create', null] else ['update', item.attributes.sid]
 
-      @ajax method, item, success: (model, response, opts) =>
-        item.set(sid: response.id) if method is 'create'
+      @ajax method, item, success: (model, opts) =>
+        item.set(sid: model.id) if method is 'create'
         item.save {dirty: false}, {local: true}
 
       item.attributes.id = localId; item.id = localId
 
     flushItem: (sid) ->
       model = @collection.fakeModel(sid)
-      @ajax 'delete', model, success: (model, response, opts) =>
+      @ajax 'delete', model, success: (model, opts) =>
         @storage.destroyIds.remove(sid)
 
   # Manage indexes storing to localStorage.

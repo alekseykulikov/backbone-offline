@@ -52,8 +52,8 @@ describe 'Offline', ->
 
     it "should calls \"options.success\" when storage's method responses something", ->
       successCallback = jasmine.createSpy('-Success Callback-')
-      @dream.save({name: 'New dream'}, {success: (resp) -> successCallback(resp)})
-      expect(successCallback).toHaveBeenCalledWith(@dream)
+      @dream.save({name: 'New dream'}, {success: (model, resp, options) -> successCallback(resp) })
+      expect(successCallback).toHaveBeenCalledWith(@dream.attributes)
 
     it 'should call "options.error" when response is blank', ->
       errorCallback = jasmine.createSpy('-Error Callback-')

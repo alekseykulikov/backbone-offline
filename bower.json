@@ -1,6 +1,6 @@
 {
   "name": "backbone-offline",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "main": "js/backbone_offline.js",
   "dependencies": {
     "jquery": "~1.10.x",
