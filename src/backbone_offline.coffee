@@ -223,7 +223,7 @@ do (global = window, _, Backbone) ->
           @collection.items.reset([], silent: true)
           @collection.items.create(item, silent: true, local: true, regenerateId: true) for item in response
           @collection.items.trigger('reset') unless options.silent
-          options.success(model, response, opts) if options.success
+          options.success(response, status, xhr) if options.success
 
     # @storage.sync.incremental() - incremental storage synchronization
     # 1. pull() - request data from server
@@ -237,8 +237,8 @@ do (global = window, _, Backbone) ->
       if @storage.getItem('offline')
         @storage.removeItem('offline')
         success = options.success
-        options.success = (model, response, opts) =>
-          success(model, response, opts)
+        options.success = (response, status, xhr) =>
+          success(response, status, xhr)
           @incremental()
 
     # Requests data from the server and merges it with a collection.
@@ -249,10 +249,10 @@ do (global = window, _, Backbone) ->
     # @storage.sync.pull()
     pull: (options = {}) ->
       @ajax 'read', @collection.items, _.extend {}, options,
-        success: (model, response, opts) =>
+        success: (response, status, xhr) =>
           @collection.destroyDiff(response)
           @pullItem(item) for item in response
-          options.success(model, response, opts) if options.success
+          options.success(response, status, xhr) if options.success
 
     pullItem: (item) ->
       local = @collection.get(item.id)
@@ -290,7 +290,7 @@ do (global = window, _, Backbone) ->
       delete item.attributes.id
       [method, item.id] = if item.get('sid') is 'new' then ['create', null] else ['update', item.attributes.sid]
 
-      @ajax method, item, success: (model, response, opts) =>
+      @ajax method, item, success: (response, status, xhr) =>
         item.set(sid: response.id) if method is 'create'
         item.save {dirty: false}, {local: true}
 
@@ -298,7 +298,7 @@ do (global = window, _, Backbone) ->
 
     flushItem: (sid) ->
       model = @collection.fakeModel(sid)
-      @ajax 'delete', model, success: (model, response, opts) =>
+      @ajax 'delete', model, success: (response, status, xhr) =>
         @storage.destroyIds.remove(sid)
 
   # Manage indexes storing to localStorage.
