@@ -1,3 +1,9 @@
+# Disclaimer
+
+This's project is on long reconstruction. I want to rewrite it from scratch and don't support current version. 
+The source code could be useful if you're going to hacking offline problem, 
+And make sure to let me know about your results, because I'm curious ;)
+
 ## About Backbone.offline
 
 Adds ability to store the data to localStorage and sync data with a server. It is useful when you want to:
